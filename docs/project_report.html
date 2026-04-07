@@ -636,14 +636,15 @@ Content-Type: application/json
   and systematic evaluation positions it well above a standard academic project.
 </p>
 <p>
-  <strong>Completed phases (1&ndash;5)</strong> have produced a dataset of 9,219 cleaned
-  records with 262 engineered features, trained four regression models (Linear, Ridge, Lasso, ElasticNet),
-  and identified <strong>Ridge Regression (R&sup2; = 0.7151)</strong> as the best-performing model.
+  <strong>Completed phases (1&ndash;6)</strong> have produced a dataset of 9,219 cleaned
+  records with 262 engineered features, trained and tuned four regression models,
+  and identified <strong>ElasticNet (&alpha;=0.001, l1_ratio=0.8, R&sup2; = 0.7158)</strong> as the best-performing model
+  after hyperparameter optimization with GridSearchCV.
   The scaler artefact has been saved for deployment consistency.
 </p>
 <p>
-  <strong>Next steps:</strong> Hyperparameter tuning with GridSearchCV (Phase 6),
-  final evaluation and model selection (Phase 7), and full-stack deployment (Phase 8).
+  <strong>Next steps:</strong> Final evaluation and model selection (Phase 7),
+  and full-stack deployment (Phase 8).
 </p>
 
 <!-- ══════════════════════════════════════════════════════════ -->
@@ -1090,6 +1091,259 @@ flowchart TD
       </td>
     </tr>
   </table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- PHASE 6 ADDENDUM                                          -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h3>Phase 6: Optimization (Hyperparameter Tuning &amp; Cross-Validation)</h3>
+<p>
+  Phase 6 addresses a critical limitation of Phase 5: all regularized models were trained with <strong>default alpha = 1.0</strong>. This is an arbitrary choice &mdash; the <em>optimal</em> penalty strength depends on the data. Using <strong>GridSearchCV</strong> with 5-fold cross-validation, we systematically search for the best hyperparameters and then validate the tuned models.
+</p>
+
+<h4>6.1 What is Hyperparameter Tuning?</h4>
+<div class="box">
+  <strong>Parameters vs Hyperparameters:</strong>
+  <table style="width:100%;margin-top:8px;">
+    <thead>
+      <tr><th>Parameters</th><th>Hyperparameters</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Learned FROM data during training (e.g., coefficients &beta;)</td>
+        <td>Set BY YOU before training (e.g., &alpha;, l1_ratio)</td>
+      </tr>
+      <tr>
+        <td>The model updates these automatically</td>
+        <td>Must be chosen manually or via tuning</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h4>6.2 GridSearchCV Workflow</h4>
+<div class="mermaid">
+flowchart TD
+    A["Define Search Space"] --> B["GridSearchCV"]
+    B --> C["For each alpha in search space"]
+    C --> D["5-Fold Cross-Validation"]
+    D --> E["Fold 1: Train on 4, Validate on 1"]
+    D --> F["Fold 2: Train on 4, Validate on 1"]
+    D --> G["Fold 3: Train on 4, Validate on 1"]
+    D --> H["Fold 4: Train on 4, Validate on 1"]
+    D --> I["Fold 5: Train on 4, Validate on 1"]
+    E --> J["Average R2 across 5 folds"]
+    F --> J
+    G --> J
+    H --> J
+    I --> J
+    J --> K["Record mean R2 for this alpha"]
+    K --> C
+    C --> L["Select alpha with highest mean R2"]
+    L --> M["Retrain on full training set with best alpha"]
+    M --> N["Evaluate on held-out test set"]
+    style A fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    style L fill:#d1fae5,stroke:#10b981,stroke-width:2px
+    style N fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+</div>
+
+<h4>6.3 Search Spaces</h4>
+<table>
+  <thead>
+    <tr><th>Model</th><th>Hyperparameter</th><th>Values Tested</th><th>Total Combinations</th><th>Total Fits (5-fold)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Ridge</strong></td><td>&alpha;</td><td>[0.001, 0.01, 0.1, 1, 10, 100]</td><td>6</td><td>30</td></tr>
+    <tr><td><strong>Lasso</strong></td><td>&alpha;</td><td>[0.001, 0.01, 0.1, 1, 10, 100]</td><td>6</td><td>30</td></tr>
+    <tr><td><strong>ElasticNet</strong></td><td>&alpha; &times; l1_ratio</td><td>[0.001, 0.01, 0.1, 1, 10] &times; [0.2, 0.5, 0.8]</td><td>15</td><td>75</td></tr>
+  </tbody>
+</table>
+
+<h4>6.4 Tuning Results &mdash; Best Hyperparameters</h4>
+<table>
+  <thead>
+    <tr><th>Model</th><th>Best &alpha;</th><th>Best l1_ratio</th><th>CV R&sup2; (5-fold)</th></tr>
+  </thead>
+  <tbody>
+    <tr style="background-color:#dbeafe;"><td><strong>Ridge</strong></td><td>1.0</td><td>N/A</td><td>0.6726</td></tr>
+    <tr style="background-color:#fce7f3;"><td><strong>Lasso</strong></td><td>0.01</td><td>N/A</td><td>0.6741</td></tr>
+    <tr style="background-color:#d1fae5;"><td><strong>ElasticNet</strong></td><td>0.001</td><td>0.8</td><td>0.6745</td></tr>
+  </tbody>
+</table>
+<div class="box success">
+  <strong>Key Discovery:</strong> Lasso and ElasticNet dramatically improved when &alpha; was reduced from 1.0 to 0.01/0.001. The default &alpha;=1.0 was <em>too aggressive</em>, eliminating features that carry genuine price signal. With tuned alphas, all three models now perform comparably!
+</div>
+
+<h4>6.5 Before vs After Tuning &mdash; Comparison</h4>
+<table>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Before (Phase 5) R&sup2;</th>
+      <th>Best Params</th>
+      <th>After (Tuned) R&sup2;</th>
+      <th>&Delta;R&sup2;</th>
+      <th>Improvement</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="background-color:#f1f5f9;">
+      <td>Linear Regression</td>
+      <td>0.7084</td>
+      <td>N/A</td>
+      <td>0.7084</td>
+      <td>0.0000</td>
+      <td>&mdash;</td>
+    </tr>
+    <tr style="background-color:#dbeafe;">
+      <td><strong>Ridge</strong></td>
+      <td>0.7151</td>
+      <td>&alpha;=1.0</td>
+      <td>0.7151</td>
+      <td>0.0000</td>
+      <td>+0.00%</td>
+    </tr>
+    <tr style="background-color:#fce7f3;">
+      <td><strong>Lasso</strong></td>
+      <td>0.6577</td>
+      <td>&alpha;=0.01</td>
+      <td>0.7106</td>
+      <td>+0.0529</td>
+      <td><strong>+8.04%</strong></td>
+    </tr>
+    <tr style="background-color:#d1fae5;">
+      <td><strong>ElasticNet</strong></td>
+      <td>0.5594</td>
+      <td>&alpha;=0.001, &rho;=0.8</td>
+      <td><strong>0.7158</strong></td>
+      <td><strong>+0.1564</strong></td>
+      <td><strong>+27.96% &#x1F3C6;</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="box success">
+  <strong>&#x1F3C6; Biggest Winner: ElasticNet</strong><br>
+  ElasticNet's R&sup2; jumped from 0.5594 to <strong>0.7158</strong> &mdash; a massive <strong>+27.96% improvement</strong>! With tuned hyperparameters, it now <em>overtakes Ridge</em> as the best-performing model. This proves that hyperparameter tuning is essential; default settings can severely undervalue a model's true potential.
+</div>
+
+<h4>6.6 Visual Analysis</h4>
+<table style="margin-top:20px;">
+  <tr>
+    <td style="width:50%;text-align:center;">
+      <h4>Alpha vs R&sup2; &mdash; Ridge &amp; Lasso Tuning Curves</h4>
+      <img src="../backend/ml_pipeline/outputs/optimization/alpha_vs_r2.png" width="95%" alt="Alpha vs R² Curves">
+    </td>
+    <td style="width:50%;text-align:center;">
+      <h4>Before vs After Tuning &mdash; R&sup2; Bar Chart</h4>
+      <img src="../backend/ml_pipeline/outputs/optimization/before_vs_after_r2.png" width="95%" alt="Before vs After R²">
+    </td>
+  </tr>
+</table>
+<p>
+  <strong>Interpretation &mdash; Alpha vs R&sup2; Curves:</strong> The U-shaped curves demonstrate the <strong>bias&ndash;variance trade-off</strong> in action. Very small &alpha; &rarr; near-OLS (high variance), very large &alpha; &rarr; over-penalised (high bias). The optimal &alpha; sits at the peak of the curve, balancing both.
+</p>
+
+<table style="margin-top:20px;">
+  <tr>
+    <td style="width:50%;text-align:center;">
+      <h4>5-Fold CV Scores &mdash; Model Stability</h4>
+      <img src="../backend/ml_pipeline/outputs/optimization/cv_fold_scores.png" width="95%" alt="CV Fold Scores">
+    </td>
+    <td style="width:50%;text-align:center;">
+      <h4>ElasticNet Heatmap &mdash; &alpha; &times; l1_ratio</h4>
+      <img src="../backend/ml_pipeline/outputs/optimization/elasticnet_heatmap.png" width="95%" alt="ElasticNet Heatmap">
+    </td>
+  </tr>
+</table>
+<p>
+  <strong>Interpretation &mdash; CV Fold Scores:</strong> The box plot shows each model's R&sup2; across 5 folds. Tighter boxes indicate more <em>stable</em> models. All tuned models show comparable stability, confirming reliable generalisation.
+</p>
+<p>
+  <strong>Interpretation &mdash; ElasticNet Heatmap:</strong> The heatmap reveals that the best performance occurs at low &alpha; (0.001) with high l1_ratio (0.8), meaning a mostly-Lasso blend with very gentle penalty. This allows ElasticNet to retain most features while still benefiting from L1 sparsity.
+</p>
+
+<h4>6.7 Cross-Validation Analysis</h4>
+<div class="box">
+  <strong>How 5-Fold Cross-Validation Works:</strong>
+  <pre style="font-family:monospace;font-size:13px;margin-top:8px;background:#f8fafc;padding:12px;border-radius:6px;">
+  Fold 1:  [VAL ] [Train] [Train] [Train] [Train]
+  Fold 2:  [Train] [VAL ] [Train] [Train] [Train]
+  Fold 3:  [Train] [Train] [VAL ] [Train] [Train]
+  Fold 4:  [Train] [Train] [Train] [VAL ] [Train]
+  Fold 5:  [Train] [Train] [Train] [Train] [VAL ]
+
+  Each sample appears in the validation set exactly ONCE.
+  Final score = MEAN across all 5 fold scores.
+  </pre>
+  <strong>Why it improves reliability:</strong>
+  <ul>
+    <li>A single train/test split is noisy &mdash; the score depends on which samples happen to be in each set</li>
+    <li>CV averages over 5 different splits &rarr; much more robust estimate</li>
+    <li>The standard deviation across folds tells us how <em>stable</em> the model is</li>
+    <li>Small std &rarr; consistent performance &rarr; reliable model</li>
+  </ul>
+</div>
+
+<h4>6.8 Bias&ndash;Variance Trade-off</h4>
+<div class="mermaid">
+flowchart LR
+    subgraph Low_Alpha["Low Alpha weak penalty"]
+        A["Low Bias + High Variance"]
+        B["Fits training data well"]
+        C["May overfit to noise"]
+    end
+    subgraph Optimal_Alpha["Optimal Alpha sweet spot"]
+        D["Balanced Bias-Variance"]
+        E["Best generalisation"]
+        F["Found by GridSearchCV"]
+    end
+    subgraph High_Alpha["High Alpha strong penalty"]
+        G["High Bias + Low Variance"]
+        H["Too simple, underfits"]
+        I["Ignores real patterns"]
+    end
+    Low_Alpha --> Optimal_Alpha
+    Optimal_Alpha --> High_Alpha
+    style Optimal_Alpha fill:#d1fae5,stroke:#10b981,stroke-width:2px
+    style Low_Alpha fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    style High_Alpha fill:#fce7f3,stroke:#ec4899,stroke-width:2px
+</div>
+
+<h4>6.9 Final Model Selection</h4>
+<div class="box success">
+  <strong>&#x1F3C6; Final Best Model: ElasticNet (Tuned)</strong>
+  <table style="width:100%;margin-top:10px;">
+    <tr>
+      <td><strong>Best &alpha;</strong></td><td>0.001</td>
+      <td><strong>Best l1_ratio</strong></td><td>0.8</td>
+    </tr>
+    <tr>
+      <td><strong>Test R&sup2;</strong></td><td>0.7158</td>
+      <td><strong>Test MSE</strong></td><td>2,998.33</td>
+    </tr>
+  </table>
+  <br>
+  <strong>Justification:</strong>
+  <ol>
+    <li><strong>Performance:</strong> Highest R&sup2; (0.7158) on the unseen test set</li>
+    <li><strong>Stability:</strong> Consistent scores across all 5 CV folds</li>
+    <li><strong>Reliability:</strong> Small gap between CV and test scores confirms generalisation</li>
+    <li><strong>Interpretability:</strong> With l1_ratio=0.8, it still performs feature selection (L1 dominant), producing a simpler model than Ridge</li>
+  </ol>
+</div>
+
+<h4>6.10 Key Phase 6 Conclusions</h4>
+<div class="box">
+  <strong>What We Learned:</strong>
+  <ol>
+    <li><strong>Default hyperparameters are NOT optimal</strong> &mdash; ElasticNet went from worst (R&sup2;=0.5594) to best (R&sup2;=0.7158) after tuning</li>
+    <li><strong>GridSearchCV is essential</strong> &mdash; it systematically explores the search space and finds the bias&ndash;variance sweet spot</li>
+    <li><strong>Cross-validation provides reliable estimates</strong> &mdash; unlike a single split, CV reduces the risk of lucky/unlucky test sets</li>
+    <li><strong>Alpha = 1.0 was too aggressive</strong> for Lasso and ElasticNet on this dataset, eliminating features that contain genuine price signal</li>
+    <li><strong>All three regularized models are now competitive</strong> &mdash; with proper tuning, the choice depends more on deployment requirements (simplicity vs stability) than on raw accuracy</li>
+  </ol>
 </div>
 
 <!-- ── FOOTER ──────────────────────────────────────────────── -->

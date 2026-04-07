@@ -25,6 +25,7 @@ backend/ml_pipeline/outputs/processed/
 backend/ml_pipeline/outputs/baseline/
 backend/ml_pipeline/outputs/advanced_models/
 backend/ml_pipeline/outputs/eda/
+backend/ml_pipeline/outputs/optimization/
 
 # ── Serialized Models ────────────────────────────────────
 *.pkl
