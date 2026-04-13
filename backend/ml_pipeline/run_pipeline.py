@@ -2,7 +2,7 @@
 """
 run_pipeline.py
 ===============
-Master script that orchestrates Phase 1 → 2 → 3 → 4 → 5 → 6 sequentially.
+Master script that orchestrates Phase 1 → 2 → 3 → 4 → 5 → 6 → 7 sequentially.
 
 Usage:
     cd backend/ml_pipeline/
@@ -48,8 +48,12 @@ def main() -> None:
     phase6 = import_module("06_optimization")
     phase6.run_optimization()
 
+    # ── Phase 7: Final Model Selection & Deployment Prep ──────────
+    phase7 = import_module("07_finalize_and_save_model")
+    phase7.run_finalize()
+
     print("\n" + "=" * 60)
-    print("6 PHASES COMPLETED — all models trained, tuned, and compared.")
+    print("7 PHASES COMPLETED — model finalized and deployment-ready.")
     print("=" * 60)
 
 
