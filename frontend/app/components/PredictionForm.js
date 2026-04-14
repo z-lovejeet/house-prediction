@@ -1,318 +1,248 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { LOCATIONS } from "../data/locations";
+import ModelSelector from "./ModelSelector";
+import ComparisonTable from "./ComparisonTable";
+import ModelCharts from "./ModelCharts";
+import InsightsPanel from "./InsightsPanel";
+import {
+  IconArea, IconBed, IconBath, IconLocation, IconSpinner, IconBolt, IconCrown,
+} from "./icons";
 
-/* ═══════════════════════════════════════════════════════════════
-   API Configuration
-   ═════════════════════════════════════════════════════════════ */
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-/* ═══════════════════════════════════════════════════════════════
-   Icons (inline SVG — no extra dependency)
-   ═════════════════════════════════════════════════════════════ */
-const AreaIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-  </svg>
-);
-const BedIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-  </svg>
-);
-const BathIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-const LocationIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-  </svg>
-);
-
-/* ═══════════════════════════════════════════════════════════════
-   Format price for display
-   ═════════════════════════════════════════════════════════════ */
 function formatPrice(lakhs) {
-  if (lakhs >= 100) {
-    const crores = (lakhs / 100).toFixed(2);
-    return { value: crores, unit: "Crores", raw: lakhs };
-  }
-  return { value: lakhs.toFixed(2), unit: "Lakhs", raw: lakhs };
+  if (lakhs >= 100) return { value: (lakhs / 100).toFixed(2), unit: "Crores" };
+  return { value: lakhs.toFixed(2), unit: "Lakhs" };
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   PredictionForm Component
-   ═════════════════════════════════════════════════════════════ */
 export default function PredictionForm() {
-  /* ── State ────────────────────────────────────────────────── */
-  const [form, setForm] = useState({
-    area: "",
-    bedrooms: "",
-    bathrooms: "",
-    location: "",
-  });
+  const [form, setForm] = useState({ area: "", bedrooms: "", bathrooms: "", location: "" });
+  const [selectedModel, setSelectedModel] = useState(null);
+  const [models, setModels] = useState([]);
   const [result, setResult] = useState(null);
+  const [compareData, setCompareData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [comparing, setComparing] = useState(false);
   const [error, setError] = useState(null);
 
-  /* ── Handlers ─────────────────────────────────────────────── */
+  useEffect(() => {
+    fetch(`${API_URL}/models`)
+      .then((r) => r.json())
+      .then((data) => {
+        setModels(data.models || []);
+        if (data.best_model) setSelectedModel(data.best_model);
+      })
+      .catch(() => {});
+  }, []);
+
   const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     if (error) setError(null);
   }, [error]);
 
   const handleReset = useCallback(() => {
     setForm({ area: "", bedrooms: "", bathrooms: "", location: "" });
     setResult(null);
+    setCompareData(null);
     setError(null);
   }, []);
 
-  /* ── Validation ───────────────────────────────────────────── */
   const validate = () => {
-    if (!form.area || Number(form.area) <= 0) {
-      return "Please enter a valid area (positive number).";
-    }
-    if (!form.bedrooms || Number(form.bedrooms) < 1) {
-      return "Please enter at least 1 bedroom.";
-    }
-    if (!form.bathrooms || Number(form.bathrooms) < 1) {
-      return "Please enter at least 1 bathroom.";
-    }
-    if (!form.location) {
-      return "Please select a location.";
-    }
+    if (!form.area || Number(form.area) <= 0) return "Enter a valid area (positive number).";
+    if (!form.bedrooms || Number(form.bedrooms) < 1) return "Enter at least 1 bedroom.";
+    if (!form.bathrooms || Number(form.bathrooms) < 1) return "Enter at least 1 bathroom.";
+    if (!form.location) return "Select a location.";
     return null;
   };
 
-  /* ── Submit ───────────────────────────────────────────────── */
-  const handleSubmit = async (e) => {
+  const handlePredict = async (e) => {
     e.preventDefault();
+    const err = validate();
+    if (err) return setError(err);
 
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    setResult(null);
+    setLoading(true); setError(null); setResult(null);
 
     try {
-      const response = await fetch(`${API_URL}/predict`, {
+      const res = await fetch(`${API_URL}/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          area: Number(form.area),
-          bedrooms: Number(form.bedrooms),
-          bathrooms: Number(form.bathrooms),
-          location: form.location,
+          area: Number(form.area), bedrooms: Number(form.bedrooms),
+          bathrooms: Number(form.bathrooms), location: form.location, model: selectedModel,
         }),
       });
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => null);
-        throw new Error(
-          errData?.detail?.[0]?.msg ||
-          errData?.detail ||
-          `Server returned ${response.status}`
-        );
+      if (!res.ok) {
+        const d = await res.json().catch(() => null);
+        throw new Error(d?.detail?.[0]?.msg || d?.detail || `Server error ${res.status}`);
       }
+      setResult(await res.json());
+    } catch (e) {
+      setError(e.message.includes("fetch") ? "Cannot connect to backend. Is it running?" : e.message);
+    } finally { setLoading(false); }
+  };
 
-      const data = await response.json();
-      setResult(data);
-    } catch (err) {
-      if (err.message.includes("Failed to fetch") || err.message.includes("NetworkError")) {
-        setError("Cannot connect to the prediction server. Make sure the FastAPI backend is running on " + API_URL);
-      } else {
-        setError(err.message || "Something went wrong. Please try again.");
-      }
-    } finally {
-      setLoading(false);
-    }
+  const handleCompare = async () => {
+    const err = validate();
+    if (err) return setError(err);
+
+    setComparing(true); setError(null); setCompareData(null);
+
+    try {
+      const res = await fetch(`${API_URL}/compare`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          area: Number(form.area), bedrooms: Number(form.bedrooms),
+          bathrooms: Number(form.bathrooms), location: form.location,
+        }),
+      });
+      if (!res.ok) throw new Error("Comparison failed");
+      setCompareData(await res.json());
+    } catch (e) { setError(e.message); }
+    finally { setComparing(false); }
   };
 
   const price = result ? formatPrice(result.predicted_price) : null;
+  const modelInfo = result ? models.find((m) => m.key === result.model_used) : null;
 
-  /* ── Render ───────────────────────────────────────────────── */
+  const formatModelName = (key) =>
+    key?.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      .replace("Elasticnet", "ElasticNet").replace("Linear", "Linear Regression");
+
+  /* ── Input field config ───────────────────────────────────── */
+  const inputClass = `w-full px-4 py-3 rounded-xl bg-background border border-border
+    placeholder:text-muted/50 focus:outline-none focus:ring-2
+    focus:ring-primary/30 focus:border-primary text-foreground transition-all`;
+
   return (
-    <div className="w-full max-w-xl mx-auto">
-      {/* ── Form Card ─────────────────────────────────────────── */}
-      <form
-        onSubmit={handleSubmit}
-        className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-lg"
-      >
-        <div className="grid gap-5">
-          {/* Area */}
+    <div className="w-full max-w-3xl mx-auto space-y-6">
+
+      <ModelSelector models={models} selected={selectedModel} onSelect={setSelectedModel} />
+
+      {/* ── Form ────────────────────────────────────────────── */}
+      <form onSubmit={handlePredict} className="bg-card border border-border rounded-2xl p-5 md:p-6 shadow-sm">
+        <div className="grid gap-4">
           <div className="space-y-1.5">
-            <label htmlFor="area" className="flex items-center gap-2 text-sm font-medium text-foreground/70">
-              <AreaIcon /> Area (sq. ft)
+            <label htmlFor="area" className="flex items-center gap-2 text-xs font-medium text-muted">
+              <IconArea className="w-3.5 h-3.5" /> Area (sq. ft)
             </label>
-            <input
-              id="area"
-              name="area"
-              type="number"
-              min="1"
-              step="any"
-              placeholder="e.g. 1500"
-              value={form.area}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl bg-background border border-border
-                         placeholder:text-foreground/30 focus:outline-none focus:ring-2
-                         focus:ring-primary/40 focus:border-primary text-foreground"
-              required
-            />
+            <input id="area" name="area" type="number" min="1" step="any"
+              placeholder="e.g. 1500" value={form.area} onChange={handleChange}
+              className={inputClass} required />
           </div>
 
-          {/* Bedrooms & Bathrooms — side by side */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Bedrooms */}
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label htmlFor="bedrooms" className="flex items-center gap-2 text-sm font-medium text-foreground/70">
-                <BedIcon /> Bedrooms
+              <label htmlFor="bedrooms" className="flex items-center gap-2 text-xs font-medium text-muted">
+                <IconBed className="w-3.5 h-3.5" /> Bedrooms
               </label>
-              <input
-                id="bedrooms"
-                name="bedrooms"
-                type="number"
-                min="1"
-                max="20"
-                placeholder="e.g. 3"
-                value={form.bedrooms}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl bg-background border border-border
-                           placeholder:text-foreground/30 focus:outline-none focus:ring-2
-                           focus:ring-primary/40 focus:border-primary text-foreground"
-                required
-              />
+              <input id="bedrooms" name="bedrooms" type="number" min="1" max="20"
+                placeholder="e.g. 3" value={form.bedrooms} onChange={handleChange}
+                className={inputClass} required />
             </div>
-
-            {/* Bathrooms */}
             <div className="space-y-1.5">
-              <label htmlFor="bathrooms" className="flex items-center gap-2 text-sm font-medium text-foreground/70">
-                <BathIcon /> Bathrooms
+              <label htmlFor="bathrooms" className="flex items-center gap-2 text-xs font-medium text-muted">
+                <IconBath className="w-3.5 h-3.5" /> Bathrooms
               </label>
-              <input
-                id="bathrooms"
-                name="bathrooms"
-                type="number"
-                min="1"
-                max="20"
-                placeholder="e.g. 2"
-                value={form.bathrooms}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl bg-background border border-border
-                           placeholder:text-foreground/30 focus:outline-none focus:ring-2
-                           focus:ring-primary/40 focus:border-primary text-foreground"
-                required
-              />
+              <input id="bathrooms" name="bathrooms" type="number" min="1" max="20"
+                placeholder="e.g. 2" value={form.bathrooms} onChange={handleChange}
+                className={inputClass} required />
             </div>
           </div>
 
-          {/* Location */}
           <div className="space-y-1.5">
-            <label htmlFor="location" className="flex items-center gap-2 text-sm font-medium text-foreground/70">
-              <LocationIcon /> Location
+            <label htmlFor="location" className="flex items-center gap-2 text-xs font-medium text-muted">
+              <IconLocation className="w-3.5 h-3.5" /> Location
             </label>
-            <select
-              id="location"
-              name="location"
-              value={form.location}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl bg-background border border-border
-                         text-foreground focus:outline-none focus:ring-2
-                         focus:ring-primary/40 focus:border-primary appearance-none
-                         cursor-pointer"
-              required
-            >
-              <option value="" disabled>Select a location…</option>
-              {LOCATIONS.map((loc) => (
-                <option key={loc} value={loc}>
-                  {loc}
-                </option>
-              ))}
+            <select id="location" name="location" value={form.location} onChange={handleChange}
+              className={`${inputClass} appearance-none cursor-pointer`} required>
+              <option value="" disabled>Select a location...</option>
+              {LOCATIONS.map((loc) => <option key={loc} value={loc}>{loc}</option>)}
             </select>
           </div>
         </div>
 
-        {/* ── Error ───────────────────────────────────────────── */}
         {error && (
-          <div className="mt-4 px-4 py-3 rounded-xl bg-error-bg border border-error/20
+          <div className="mt-3 px-4 py-2.5 rounded-xl bg-error-bg border border-error/15
                           text-error text-sm animate-fade-in-up">
-            ⚠️ {error}
+            {error}
           </div>
         )}
 
-        {/* ── Buttons ─────────────────────────────────────────── */}
-        <div className="flex gap-3 mt-6">
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex-1 py-3.5 rounded-xl font-semibold text-white
+        <div className="flex gap-3 mt-5">
+          <button type="submit" disabled={loading}
+            className="flex-1 py-3 rounded-xl font-semibold text-white
                        bg-gradient-to-r from-gradient-start to-gradient-end
                        hover:shadow-lg hover:shadow-primary-glow
-                       active:scale-[0.98] disabled:opacity-60
-                       disabled:cursor-not-allowed transition-all cursor-pointer"
-          >
+                       active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
+                       transition-all cursor-pointer text-sm">
             {loading ? (
               <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Predicting…
+                <IconSpinner className="w-4 h-4" /> Predicting...
               </span>
-            ) : (
-              "Predict Price"
-            )}
+            ) : "Predict Price"}
           </button>
 
-          <button
-            type="button"
-            onClick={handleReset}
-            className="px-5 py-3.5 rounded-xl font-medium border border-border
-                       text-foreground/60 hover:bg-card-hover hover:text-foreground
-                       active:scale-[0.98] transition-all cursor-pointer"
-          >
+          <button type="button" onClick={handleCompare} disabled={comparing}
+            className="flex items-center gap-1.5 px-4 py-3 rounded-xl font-medium
+                       border border-accent/30 text-accent text-sm
+                       hover:bg-accent/5 active:scale-[0.98] disabled:opacity-50
+                       disabled:cursor-not-allowed transition-all cursor-pointer">
+            {comparing ? <IconSpinner className="w-3.5 h-3.5" /> : <IconBolt className="w-3.5 h-3.5" />}
+            Compare All
+          </button>
+
+          <button type="button" onClick={handleReset}
+            className="px-4 py-3 rounded-xl font-medium border border-border
+                       text-muted hover:bg-card-hover hover:text-foreground
+                       active:scale-[0.98] transition-all cursor-pointer text-sm">
             Reset
           </button>
         </div>
       </form>
 
-      {/* ── Result Card ───────────────────────────────────────── */}
+      {/* ── Result ──────────────────────────────────────────── */}
       {result && price && (
-        <div className="mt-6 animate-fade-in-up">
-          <div className="bg-card border border-success/30 rounded-2xl p-6 md:p-8
-                          result-glow text-center">
-            <p className="text-sm font-medium text-foreground/50 mb-1">
+        <div className="animate-fade-in-up">
+          <div className="bg-card border border-success/20 rounded-2xl p-6 result-glow text-center">
+            <p className="text-xs font-medium text-muted uppercase tracking-wider mb-1">
               Estimated Price
             </p>
-            <p className="text-4xl md:text-5xl font-bold gradient-text mb-1">
+            <p className="text-4xl md:text-5xl font-bold gradient-text mb-0.5">
               ₹ {price.value}
             </p>
-            <p className="text-lg font-medium text-foreground/60">
-              {price.unit}
-            </p>
+            <p className="text-base font-medium text-foreground/50">{price.unit}</p>
 
-            {/* Details row */}
-            <div className="mt-5 flex flex-wrap justify-center gap-x-4 gap-y-1
-                            text-xs text-foreground/40">
-              <span>{form.area} sq.ft</span>
-              <span>•</span>
+            <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full
+                            bg-primary/5 border border-primary/15 text-xs text-primary font-medium">
+              {modelInfo?.is_best && <IconCrown className="w-3 h-3 text-amber-500" />}
+              {formatModelName(result.model_used)}
+              <span className="text-muted">·</span>
+              R² = {result.model_r2}
+            </div>
+
+            <div className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-muted">
+              <span>{form.area} sqft</span>
+              <span className="text-border">|</span>
               <span>{form.bedrooms} BHK</span>
-              <span>•</span>
+              <span className="text-border">|</span>
               <span>{form.bathrooms} Bath</span>
-              <span>•</span>
+              <span className="text-border">|</span>
               <span>{form.location}</span>
             </div>
+
+            <p className="mt-2 text-[11px] text-muted/60">
+              ≈ ₹ {((result.predicted_price * 100000) / Number(form.area)).toLocaleString("en-IN", { maximumFractionDigits: 0 })}/sqft
+            </p>
           </div>
         </div>
       )}
+
+      {compareData && <ComparisonTable data={compareData} onClose={() => setCompareData(null)} />}
+      {models.length > 0 && <ModelCharts compareData={compareData} models={models} />}
+      <InsightsPanel />
     </div>
   );
 }

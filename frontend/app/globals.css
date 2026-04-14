@@ -1,23 +1,24 @@
 @import "tailwindcss";
 
-/* ── Design Tokens ────────────────────────────────────────── */
+/* ── Design System ────────────────────────────────────────── */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card:       #ffffff;
-  --card-hover: #f1f5f9;
-  --border:     #e2e8f0;
+  --background:    #f8fafc;
+  --foreground:    #0f172a;
+  --card:          #ffffff;
+  --card-hover:    #f1f5f9;
+  --border:        #e2e8f0;
+  --muted:         #94a3b8;
 
-  --primary:    #6366f1;
+  --primary:       #6366f1;
   --primary-hover: #4f46e5;
-  --primary-glow: rgba(99, 102, 241, 0.25);
+  --primary-glow:  rgba(99, 102, 241, 0.2);
 
-  --accent:     #06b6d4;
-  --success:    #10b981;
-  --success-bg: #ecfdf5;
-  --warning:    #f59e0b;
-  --error:      #ef4444;
-  --error-bg:   #fef2f2;
+  --accent:        #06b6d4;
+  --success:       #10b981;
+  --success-bg:    rgba(16, 185, 129, 0.06);
+  --warning:       #f59e0b;
+  --error:         #ef4444;
+  --error-bg:      rgba(239, 68, 68, 0.06);
 
   --gradient-start: #6366f1;
   --gradient-end:   #06b6d4;
@@ -25,18 +26,19 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0b1120;
-    --foreground: #e2e8f0;
-    --card:       #151d30;
-    --card-hover: #1e293b;
-    --border:     #1e293b;
+    --background:    #0b1120;
+    --foreground:    #e2e8f0;
+    --card:          #131c2e;
+    --card-hover:    #1a2540;
+    --border:        #1e293b;
+    --muted:         #64748b;
 
-    --primary:    #818cf8;
+    --primary:       #818cf8;
     --primary-hover: #6366f1;
-    --primary-glow: rgba(129, 140, 248, 0.2);
+    --primary-glow:  rgba(129, 140, 248, 0.15);
 
-    --success-bg: #064e3b;
-    --error-bg:   #450a0a;
+    --success-bg:    rgba(16, 185, 129, 0.08);
+    --error-bg:      rgba(239, 68, 68, 0.08);
   }
 }
 
@@ -46,6 +48,7 @@
   --color-card: var(--card);
   --color-card-hover: var(--card-hover);
   --color-border: var(--border);
+  --color-muted: var(--muted);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-glow: var(--primary-glow);
@@ -67,12 +70,9 @@ body {
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
 }
 
-/* ── Smooth transitions on inputs & cards ─────────────────── */
-input, select, button, .card {
-  transition: all 0.2s ease;
-}
+/* ── Utilities ────────────────────────────────────────────── */
+input, select, button, .card { transition: all 0.2s ease; }
 
-/* ── Gradient text utility ────────────────────────────────── */
 .gradient-text {
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
   -webkit-background-clip: text;
@@ -80,41 +80,20 @@ input, select, button, .card {
   background-clip: text;
 }
 
-/* ── Animated glow on result card ─────────────────────────── */
+/* ── Animations ───────────────────────────────────────────── */
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 15px var(--primary-glow); }
-  50%      { box-shadow: 0 0 30px var(--primary-glow), 0 0 60px rgba(99,102,241,0.1); }
+  0%, 100% { box-shadow: 0 0 12px var(--primary-glow); }
+  50%      { box-shadow: 0 0 24px var(--primary-glow), 0 0 48px rgba(99,102,241,0.06); }
 }
-.result-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
+.result-glow { animation: pulse-glow 2.5s ease-in-out infinite; }
 
-/* ── Shimmer loading animation ────────────────────────────── */
-@keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-.shimmer {
-  background: linear-gradient(90deg, transparent 30%, rgba(99,102,241,0.08) 50%, transparent 70%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-/* ── Fade-in animation ────────────────────────────────────── */
 @keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.animate-fade-in-up {
-  animation: fade-in-up 0.5s ease-out forwards;
-}
+.animate-fade-in-up { animation: fade-in-up 0.4s ease-out forwards; }
 
-/* ── Number input: hide spinners ──────────────────────────── */
+/* ── Hide number spinners ─────────────────────────────────── */
 input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-input[type="number"] {
-  -moz-appearance: textfield;
-}
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }

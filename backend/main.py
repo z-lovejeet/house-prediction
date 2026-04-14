@@ -1,341 +1,335 @@
 """
-Phase 8 – FastAPI Backend Integration
-=======================================
-Exposes the trained ML model from Phase 7 as a RESTful API.
+Phase 8 – FastAPI Backend (Enhanced with Multi-Model Support)
+==============================================================
+Exposes trained ML models from the pipeline as a RESTful API.
+Supports model selection (Linear, Ridge, Lasso, ElasticNet) and
+comparison across all models for the same input.
 
-Architecture Overview
-─────────────────────
-  Next.js Frontend  ──HTTP POST──▶  FastAPI  ──▶  predict_price()  ──▶  Model
-       (JSON)                        (API)          (Phase 7)          (.pkl)
-
-How it works:
-1. The frontend sends a JSON payload with house details (area, location, etc.)
-2. FastAPI validates the payload using a Pydantic schema (HouseInput)
-3. The validated data is converted to a dict and passed to predict_price()
-4. predict_price() handles ALL preprocessing (encoding, scaling) internally
-5. The model returns a prediction in Lakhs (₹)
-6. FastAPI wraps the result in a JSON response and sends it back
-
-Why FastAPI?
-────────────
-• Automatic request validation via Pydantic
-• Auto-generated interactive docs (Swagger UI at /docs)
-• Async-capable (handles many concurrent requests)
-• Type hints = self-documenting code
-• Built-in CORS middleware for frontend integration
-
-Usage
-─────
-    # From project root:
-    uvicorn backend.main:app --reload
-
-    # Then open:
-    #   http://127.0.0.1:8000       → root health check
-    #   http://127.0.0.1:8000/docs  → interactive Swagger docs
+Endpoints
+─────────
+  GET  /            → Health check
+  GET  /models      → All available models with R², MSE, hyperparams
+  POST /predict     → Predict with a specific model (default: best)
+  POST /compare     → Run ALL models on the same input, return comparison
 """
 
 import os
 import json
+import pickle
+import warnings
+import numpy as np
+import pandas as pd
 from datetime import datetime
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-# ─── Import the prediction pipeline from Phase 7 ─────────────────────
-# predict_price() encapsulates ALL preprocessing (encoding + scaling)
-# and model loading, so the API layer stays clean.
-from backend.ml_pipeline.finalize_and_save_model import predict_price
+warnings.filterwarnings("ignore")
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Paths
+# ═══════════════════════════════════════════════════════════════════════════
+BASE_DIR      = os.path.dirname(__file__)
+PROCESSED_DIR = os.path.join(BASE_DIR, "ml_pipeline", "outputs", "processed")
+OPT_DIR       = os.path.join(BASE_DIR, "ml_pipeline", "outputs", "optimization")
+ADV_DIR       = os.path.join(BASE_DIR, "ml_pipeline", "outputs", "advanced_models")
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 1  Load / Train All Models at Startup
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Model registry: name → { model, r2, mse, params, description }
+MODEL_REGISTRY = {}
+
+def _load_or_train_all_models():
+    """Load all 4 model variants. Train + save if pkl files don't exist."""
+    from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
+
+    # Load shared artefacts
+    X = pd.read_csv(os.path.join(PROCESSED_DIR, "X_processed.csv"))
+    y = pd.read_csv(os.path.join(PROCESSED_DIR, "y_target.csv")).squeeze()
+
+    # Read Phase 6 results for R²/MSE
+    opt_df = pd.read_csv(os.path.join(OPT_DIR, "before_vs_after.csv"))
+
+    # Model definitions: (key, class, kwargs, row_name)
+    model_defs = [
+        ("linear",     LinearRegression, {},
+         "Linear Regression"),
+        ("ridge",      Ridge,            {"alpha": 1.0},
+         "Ridge"),
+        ("lasso",      Lasso,            {"alpha": 0.01, "max_iter": 10000},
+         "Lasso"),
+        ("elasticnet", ElasticNet,       {"alpha": 0.001, "l1_ratio": 0.8, "max_iter": 10000},
+         "ElasticNet"),
+    ]
+
+    for key, cls, kwargs, row_name in model_defs:
+        pkl_path = os.path.join(PROCESSED_DIR, f"model_{key}.pkl")
+
+        # Try to load existing pkl
+        if os.path.exists(pkl_path):
+            with open(pkl_path, "rb") as f:
+                model = pickle.load(f)
+        else:
+            # Train on full data and save
+            model = cls(**kwargs)
+            model.fit(X, y)
+            with open(pkl_path, "wb") as f:
+                pickle.dump(model, f)
+
+        # Get metrics from Phase 6 results
+        row = opt_df[opt_df["Model"] == row_name]
+        if not row.empty:
+            r2  = round(float(row["After R²"].values[0]), 4)
+            mse = round(float(row["After MSE"].values[0]), 2)
+            raw_params = str(row["Best α"].values[0])
+            best_params = "None" if raw_params in ("nan", "N/A", "None") else raw_params
+        else:
+            r2, mse, best_params = 0, 0, "None"
+
+        # Extract coefficient info
+        coeffs = {}
+        feature_names = list(X.columns)
+        numeric_features = ["total_sqft", "bath", "balcony", "bhk"]
+        for feat in numeric_features:
+            idx = feature_names.index(feat)
+            coeffs[feat] = round(float(model.coef_[idx]), 4)
+
+        # Count non-zero coefficients (for sparsity)
+        non_zero = int(np.sum(np.abs(model.coef_) > 1e-10))
+
+        MODEL_REGISTRY[key] = {
+            "model":       model,
+            "r2":          r2,
+            "mse":         mse,
+            "params":      best_params,
+            "coefficients": coeffs,
+            "non_zero_features": non_zero,
+            "total_features": len(feature_names),
+            "description": {
+                "linear":     "No regularization. Uses all features with equal weight.",
+                "ridge":      "L2 regularization. Shrinks coefficients but keeps all features.",
+                "lasso":      "L1 regularization. Drives some coefficients to exactly zero (feature selection).",
+                "elasticnet": "L1 + L2 hybrid. Combines feature selection with coefficient shrinkage.",
+            }[key],
+        }
+
+    print(f"[OK] Loaded {len(MODEL_REGISTRY)} models into registry")
+
+
+# Determine the best model
+def _get_best_model_key():
+    return max(MODEL_REGISTRY, key=lambda k: MODEL_REGISTRY[k]["r2"])
+
+
+# Load shared artefacts
+def _load_shared_artefacts():
+    with open(os.path.join(PROCESSED_DIR, "scaler.pkl"), "rb") as f:
+        scaler = pickle.load(f)
+    with open(os.path.join(PROCESSED_DIR, "feature_columns.pkl"), "rb") as f:
+        feature_columns = pickle.load(f)
+    return scaler, feature_columns
+
+_scaler = None
+_feature_columns = None
+
+
+def _predict_with_model(model, input_dict):
+    """Run prediction using a specific model object."""
+    global _scaler, _feature_columns
+    if _scaler is None:
+        _scaler, _feature_columns = _load_shared_artefacts()
+
+    # Build feature row
+    input_row = pd.DataFrame(
+        np.zeros((1, len(_feature_columns))),
+        columns=_feature_columns,
+    )
+
+    input_row["total_sqft"] = float(input_dict["area"])
+    input_row["bath"]       = float(input_dict["bathrooms"])
+    input_row["bhk"]        = int(input_dict["bedrooms"])
+    input_row["balcony"]    = float(input_dict.get("balcony", 1.0))
+
+    # Location one-hot
+    location = input_dict["location"].strip()
+    loc_col = f"location_{location}"
+    if loc_col in input_row.columns:
+        input_row[loc_col] = 1.0
+
+    # Scale numeric columns
+    num_cols = ["total_sqft", "bath", "balcony", "bhk"]
+    num_cols_present = [c for c in num_cols if c in input_row.columns]
+    input_row[num_cols_present] = _scaler.transform(input_row[num_cols_present])
+
+    prediction = model.predict(input_row)[0]
+    return round(float(prediction), 2)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 1  Load Model Metadata (for /info endpoint)
-# ═══════════════════════════════════════════════════════════════════════════
-METADATA_PATH = os.path.join(
-    os.path.dirname(__file__), "ml_pipeline", "outputs", "processed",
-    "model_metadata.json"
-)
-
-_model_metadata = {}
-if os.path.exists(METADATA_PATH):
-    with open(METADATA_PATH, "r") as f:
-        _model_metadata = json.load(f)
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# 2  FastAPI App Initialization
+# 2  FastAPI App
 # ═══════════════════════════════════════════════════════════════════════════
 app = FastAPI(
     title="House Price Prediction API",
     description=(
-        "Predicts house prices in Bengaluru based on area, location, "
-        "bedrooms, and bathrooms. Built on an ElasticNet regression model "
-        "trained on 9,200+ property listings.\n\n"
-        "**Model**: ElasticNet (α=0.001, l1_ratio=0.8) — R² = 0.7158\n\n"
-        "**Endpoints**:\n"
-        "- `GET /` — Health check & API status\n"
-        "- `GET /info` — Model metadata & configuration\n"
-        "- `POST /predict` — Predict house price from input features\n"
+        "Multi-model house price prediction for Bengaluru.\n\n"
+        "**Models**: Linear Regression, Ridge, Lasso, ElasticNet\n\n"
+        "- `GET /models` — All models with R², MSE, coefficients\n"
+        "- `POST /predict` — Predict with a specific model\n"
+        "- `POST /compare` — Compare all 4 models on same input\n"
     ),
-    version="1.0.0",
-    docs_url="/docs",        # Swagger UI
-    redoc_url="/redoc",      # ReDoc alternative
+    version="2.0.0",
 )
 
-
-# ═══════════════════════════════════════════════════════════════════════════
-# 3  CORS Middleware — Required for Next.js Frontend
-# ═══════════════════════════════════════════════════════════════════════════
-#
-# Why CORS?
-# ─────────
-# Browsers enforce the Same-Origin Policy: a frontend at localhost:3000
-# CANNOT make requests to an API at localhost:8000 unless the API
-# explicitly allows it via CORS headers.
-#
-# allow_origins=["*"] means "accept requests from ANY origin".
-# In production, restrict this to your actual frontend domain.
-#
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],              # ← Allow all origins (dev mode)
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],              # ← Allow GET, POST, etc.
-    allow_headers=["*"],              # ← Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
+@app.on_event("startup")
+def startup():
+    _load_or_train_all_models()
+
+
 # ═══════════════════════════════════════════════════════════════════════════
-# 4  Request & Response Schemas (Pydantic)
+# 3  Schemas
 # ═══════════════════════════════════════════════════════════════════════════
-#
-# Pydantic models give us:
-# • Automatic JSON parsing & type coercion
-# • Validation with clear error messages
-# • Auto-generated OpenAPI/Swagger docs
-#
 
 class HouseInput(BaseModel):
-    """
-    Input schema for house price prediction.
-
-    These are the raw features a user provides — the API handles all
-    preprocessing (encoding, scaling) internally via predict_price().
-    """
-    area: float = Field(
-        ...,
-        gt=0,
-        description="Total square footage of the property (e.g. 1500)",
-        examples=[1500],
+    area: float = Field(..., gt=0, description="Total sq.ft", examples=[1500])
+    bedrooms: int = Field(..., ge=1, le=20, examples=[3])
+    bathrooms: int = Field(..., ge=1, le=20, examples=[2])
+    location: str = Field(..., min_length=1, examples=["Whitefield"])
+    balcony: float = Field(default=1.0, ge=0, examples=[2])
+    model: Optional[str] = Field(
+        default=None,
+        description="Model to use: linear, ridge, lasso, elasticnet. Default = best.",
+        examples=["elasticnet"],
     )
-    bedrooms: int = Field(
-        ...,
-        ge=1,
-        le=20,
-        description="Number of bedrooms / BHK (e.g. 3)",
-        examples=[3],
-    )
-    bathrooms: int = Field(
-        ...,
-        ge=1,
-        le=20,
-        description="Number of bathrooms (e.g. 2)",
-        examples=[2],
-    )
-    location: str = Field(
-        ...,
-        min_length=1,
-        description="Location / neighbourhood name in Bengaluru (e.g. 'Whitefield')",
-        examples=["Whitefield"],
-    )
-    balcony: float = Field(
-        default=1.0,
-        ge=0,
-        description="Number of balconies (optional, default=1)",
-        examples=[2],
-    )
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "area": 1500,
-                    "bedrooms": 3,
-                    "bathrooms": 2,
-                    "location": "Whitefield",
-                    "balcony": 2,
-                }
-            ]
-        }
-    }
-
-
-class PredictionResponse(BaseModel):
-    """Response schema for a successful prediction."""
-    predicted_price: float = Field(
-        description="Predicted price in Lakhs (₹)"
-    )
-    status: str = Field(
-        default="success",
-        description="Request status"
-    )
-    currency: str = Field(
-        default="INR (Lakhs)",
-        description="Currency unit of the prediction"
-    )
-    input_received: dict = Field(
-        description="Echo of the input that was used for prediction"
-    )
-
-
-class HealthResponse(BaseModel):
-    """Response schema for the root health check."""
-    status: str
-    message: str
-    version: str
-    docs: str
-    timestamp: str
-
-
-class ModelInfoResponse(BaseModel):
-    """Response schema for model metadata."""
-    model_name: str
-    hyperparameters: dict
-    test_r2: float
-    test_mse: float
-    n_features: int
-    numeric_features: list
-    status: str
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 5  API Endpoints
+# 4  Endpoints
 # ═══════════════════════════════════════════════════════════════════════════
 
-# ── 5a. Root — Health Check ──────────────────────────────────────────────
-@app.get(
-    "/",
-    response_model=HealthResponse,
-    summary="Health Check",
-    description="Verify that the API is running and return basic status info.",
-    tags=["Status"],
-)
+@app.get("/", tags=["Status"])
 def root():
-    """
-    Root endpoint — confirms the API is alive.
-
-    Returns API status, version, and a link to the interactive docs.
-    This is the first thing you should hit to verify the server started.
-    """
     return {
         "status": "active",
-        "message": "House Price Prediction API is running",
-        "version": "1.0.0",
+        "message": "House Price Prediction API v2.0",
+        "models_loaded": len(MODEL_REGISTRY),
+        "best_model": _get_best_model_key(),
         "docs": "/docs",
         "timestamp": datetime.now().isoformat(),
     }
 
 
-# ── 5b. Model Info ──────────────────────────────────────────────────────
-@app.get(
-    "/info",
-    response_model=ModelInfoResponse,
-    summary="Model Information",
-    description="Return metadata about the deployed ML model.",
-    tags=["Status"],
-)
-def model_info():
-    """
-    Returns metadata about the currently deployed model.
+@app.get("/models", tags=["Models"])
+def list_models():
+    """Return all available models with their metrics and coefficients."""
+    best = _get_best_model_key()
+    result = []
+    for key, info in MODEL_REGISTRY.items():
+        result.append({
+            "key":              key,
+            "name":             key.replace("_", " ").title().replace("Elasticnet", "ElasticNet")
+                                   .replace("Linear", "Linear Regression"),
+            "r2":               info["r2"],
+            "mse":              info["mse"],
+            "params":           info["params"],
+            "description":      info["description"],
+            "coefficients":     info["coefficients"],
+            "non_zero_features": info["non_zero_features"],
+            "total_features":   info["total_features"],
+            "is_best":          key == best,
+        })
+    # Sort by R² descending
+    result.sort(key=lambda x: x["r2"], reverse=True)
+    return {"models": result, "best_model": best}
 
-    Useful for debugging, documentation, and API versioning.
-    Reads from model_metadata.json created in Phase 7.
-    """
-    if not _model_metadata:
+
+@app.post("/predict", tags=["Prediction"])
+def predict(house: HouseInput):
+    """Predict using a specific model or the best model."""
+    model_key = house.model or _get_best_model_key()
+
+    if model_key not in MODEL_REGISTRY:
         raise HTTPException(
-            status_code=503,
-            detail="Model metadata not found. Run Phase 7 first.",
+            status_code=400,
+            detail=f"Unknown model '{model_key}'. Available: {list(MODEL_REGISTRY.keys())}",
         )
 
-    return {
-        "model_name":       _model_metadata.get("model_name", "unknown"),
-        "hyperparameters":  _model_metadata.get("hyperparameters", {}),
-        "test_r2":          _model_metadata.get("test_r2", 0),
-        "test_mse":         _model_metadata.get("test_mse", 0),
-        "n_features":       _model_metadata.get("n_features", 0),
-        "numeric_features": _model_metadata.get("numeric_features", []),
-        "status":           "model_loaded",
-    }
-
-
-# ── 5c. Predict — The Core Endpoint ─────────────────────────────────────
-@app.post(
-    "/predict",
-    response_model=PredictionResponse,
-    summary="Predict House Price",
-    description=(
-        "Submit house details and receive an estimated price prediction.\n\n"
-        "**How it works internally**:\n"
-        "1. FastAPI validates your JSON input via the HouseInput schema\n"
-        "2. The input is converted to a Python dict\n"
-        "3. `predict_price()` from Phase 7 handles:\n"
-        "   - One-hot encoding the location\n"
-        "   - Scaling numeric features using the saved StandardScaler\n"
-        "   - Running the ElasticNet model\n"
-        "4. The predicted price (in Lakhs ₹) is returned\n"
-    ),
-    tags=["Prediction"],
-)
-def predict(house: HouseInput):
-    """
-    Predict house price for the given input.
-
-    The complete flow:
-        JSON body → Pydantic validation → dict → predict_price() → response
-
-    predict_price() internally:
-        1. Loads final_model.pkl, scaler.pkl, feature_columns.pkl
-        2. Builds a 262-column feature row (mostly zeros for one-hot)
-        3. Sets numeric values + activates the correct location column
-        4. Scales numeric features using the saved StandardScaler
-        5. Runs model.predict() and returns the result
-    """
     try:
-        # Convert Pydantic model → dict (matching predict_price's expected keys)
+        info = MODEL_REGISTRY[model_key]
         input_dict = {
-            "area":      house.area,
-            "bedrooms":  house.bedrooms,
+            "area": house.area,
+            "bedrooms": house.bedrooms,
             "bathrooms": house.bathrooms,
-            "location":  house.location,
-            "balcony":   house.balcony,
+            "location": house.location,
+            "balcony": house.balcony,
         }
 
-        # Call the Phase 7 prediction pipeline
-        predicted_price = predict_price(input_dict)
+        predicted_price = _predict_with_model(info["model"], input_dict)
 
         return {
             "predicted_price": predicted_price,
+            "model_used":      model_key,
+            "model_r2":        info["r2"],
+            "model_mse":       info["mse"],
             "status":          "success",
             "currency":        "INR (Lakhs)",
             "input_received":  input_dict,
         }
 
-    except FileNotFoundError as e:
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                f"Model artefacts not found: {e}. "
-                "Ensure Phase 7 has been run to generate "
-                "final_model.pkl, scaler.pkl, and feature_columns.pkl."
-            ),
-        )
-    except KeyError as e:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Missing required field: {e}",
-        )
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Prediction failed: {str(e)}",
-        )
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
+
+@app.post("/compare", tags=["Prediction"])
+def compare_all(house: HouseInput):
+    """Run ALL models on the same input and return a comparison."""
+    input_dict = {
+        "area": house.area,
+        "bedrooms": house.bedrooms,
+        "bathrooms": house.bathrooms,
+        "location": house.location,
+        "balcony": house.balcony,
+    }
+
+    best_key = _get_best_model_key()
+    results = []
+
+    for key, info in MODEL_REGISTRY.items():
+        try:
+            price = _predict_with_model(info["model"], input_dict)
+        except Exception:
+            price = None
+
+        results.append({
+            "model":           key,
+            "name":            key.replace("_", " ").title().replace("Elasticnet", "ElasticNet")
+                                  .replace("Linear", "Linear Regression"),
+            "predicted_price": price,
+            "r2":              info["r2"],
+            "mse":             info["mse"],
+            "params":          info["params"],
+            "coefficients":    info["coefficients"],
+            "non_zero_features": info["non_zero_features"],
+            "is_best":         key == best_key,
+        })
+
+    results.sort(key=lambda x: x["r2"], reverse=True)
+
+    return {
+        "status": "success",
+        "input": input_dict,
+        "comparisons": results,
+        "best_model": best_key,
+    }
