@@ -25,7 +25,7 @@ function formatPrice(lakhs) {
 }
 
 export default function PredictionForm() {
-  const [form, setForm] = useState({ area: "", bedrooms: "", bathrooms: "", balcony: "", floor: "", location: "" });
+  const [form, setForm] = useState({ area: "", bedrooms: "", bathrooms: "", balcony: "", location: "" });
   const [selectedModel, setSelectedModel] = useState(null);
   const [models, setModels] = useState([]);
   const [result, setResult] = useState(null);
@@ -51,7 +51,7 @@ export default function PredictionForm() {
   }, [error]);
 
   const handleReset = useCallback(() => {
-    setForm({ area: "", bedrooms: "", bathrooms: "", balcony: "", floor: "", location: "" });
+    setForm({ area: "", bedrooms: "", bathrooms: "", balcony: "", location: "" });
     setResult(null);
     setCompareData(null);
     setExplainData(null);
@@ -64,7 +64,6 @@ export default function PredictionForm() {
       bedrooms: String(entry.bedrooms),
       bathrooms: String(entry.bathrooms),
       balcony: entry.balcony ? String(entry.balcony) : "",
-      floor: entry.floor ? String(entry.floor) : "",
       location: entry.location,
     });
     setResult(null);
@@ -108,7 +107,7 @@ export default function PredictionForm() {
       addToHistory({
         predicted_price: data.predicted_price,
         model_used: data.model_used,
-        area: form.area, bedrooms: form.bedrooms, balcony: form.balcony, floor: form.floor,
+        area: form.area, bedrooms: form.bedrooms, balcony: form.balcony,
         bathrooms: form.bathrooms, location: form.location,
       });
       window.dispatchEvent(new Event("prediction_added"));
@@ -204,20 +203,7 @@ export default function PredictionForm() {
                 placeholder="e.g. 2" value={form.balcony} onChange={handleChange}
                 className={inputClass} />
             </div>
-            <div className="space-y-1.5">
-              <label htmlFor="floor" className="flex items-center gap-2 text-xs font-medium text-muted">
-                <IconFloor className="w-3.5 h-3.5" /> Floor
-              </label>
-              <select id="floor" name="floor" value={form.floor} onChange={handleChange}
-                className={`${inputClass} appearance-none cursor-pointer`}>
-                <option value="">Any floor</option>
-                <option value="Ground">Ground Floor</option>
-                <option value="1-3">1st - 3rd Floor</option>
-                <option value="4-7">4th - 7th Floor</option>
-                <option value="8-15">8th - 15th Floor</option>
-                <option value="16+">16th Floor+</option>
-              </select>
-            </div>
+            <div />
           </div>
 
           <div className="space-y-1.5">
@@ -304,7 +290,6 @@ export default function PredictionForm() {
               <span>{form.bathrooms} Bath</span>
               <span className="text-border">|</span>
               <span>{form.balcony || 1} Balcony</span>
-              {form.floor && <><span className="text-border">|</span><span>{form.floor} Floor</span></>}
               <span className="text-border">|</span>
               <span>{form.location}</span>
             </div>
