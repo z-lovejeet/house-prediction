@@ -11,6 +11,7 @@ import ExplainabilityChart from "./ExplainabilityChart";
 import PredictionHistory, { addToHistory } from "./PredictionHistory";
 import LocationHeatmap from "./LocationHeatmap";
 import InputWarnings from "./InputWarnings";
+import ModelExplanation from "./ModelExplanation";
 import PDFExport from "./PDFExport";
 import {
   IconArea, IconBed, IconBath, IconLocation, IconSpinner, IconBolt, IconCrown,
@@ -311,6 +312,9 @@ export default function PredictionForm() {
 
       {/* ── Explainability ──────────────────────────────────── */}
       <ExplainabilityChart result={result} form={form} selectedModel={selectedModel} />
+
+      {/* ── Model Explanation ─────────────────────────────────── */}
+      <ModelExplanation result={result} explainData={explainData} models={models} />
 
       {/* ── Sensitivity ─────────────────────────────────────── */}
       <SensitivitySliders baseResult={result} form={form} selectedModel={selectedModel} />

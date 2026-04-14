@@ -135,6 +135,127 @@ export default function PDFExport({ result, form, models, compareData, explainDa
       y += 10;
     }
 
+    // ── Model Explanation ──
+    if (result) {
+      if (y > 200) { doc.addPage(); y = 20; }
+
+      const { MODEL_INFO, formatContribution } = await import("./ModelExplanation");
+      const mInfo = MODEL_INFO[result.model_used] || MODEL_INFO.elasticnet;
+
+      doc.setTextColor(...colors.dark);
+      doc.setFontSize(12);
+      doc.setFont(undefined, "bold");
+      doc.text("Model Explanation", margin, y);
+      y += 8;
+
+      // Model identity box
+      doc.setFillColor(...colors.bg);
+      doc.roundedRect(margin, y - 3, cw, 20, 2, 2, "F");
+      doc.setFontSize(10);
+      doc.setTextColor(...colors.dark);
+      doc.setFont(undefined, "bold");
+      doc.text(mInfo.fullName, margin + 4, y + 3);
+      doc.setFontSize(7);
+      doc.setFont(undefined, "normal");
+      doc.setTextColor(...colors.muted);
+      doc.text(mInfo.type, margin + 4, y + 9);
+      doc.setFontSize(6);
+      doc.setTextColor(...colors.primary);
+      doc.text(mInfo.formula, margin + 4, y + 14);
+      y += 24;
+
+      // How it works
+      doc.setTextColor(...colors.dark);
+      doc.setFontSize(8);
+      doc.setFont(undefined, "bold");
+      doc.text("How It Works", margin, y);
+      y += 4;
+      doc.setFont(undefined, "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(80, 80, 80);
+      const howLines = doc.splitTextToSize(mInfo.howItWorks, cw);
+      doc.text(howLines, margin, y);
+      y += howLines.length * 3.5 + 4;
+
+      // Regularization
+      doc.setTextColor(...colors.dark);
+      doc.setFontSize(8);
+      doc.setFont(undefined, "bold");
+      doc.text("Regularization", margin, y);
+      y += 4;
+      doc.setFont(undefined, "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(80, 80, 80);
+      const regLines = doc.splitTextToSize(mInfo.regularization, cw);
+      doc.text(regLines, margin, y);
+      y += regLines.length * 3.5 + 4;
+
+      // Strengths & Limitations
+      doc.setFontSize(7);
+      doc.setFont(undefined, "bold");
+      doc.setTextColor(...colors.success);
+      doc.text("Strengths: ", margin, y);
+      doc.setFont(undefined, "normal");
+      doc.setTextColor(80, 80, 80);
+      const strLines = doc.splitTextToSize(mInfo.strengths, cw - 20);
+      doc.text(strLines, margin + 20, y);
+      y += strLines.length * 3.5 + 2;
+
+      doc.setFont(undefined, "bold");
+      doc.setTextColor(...colors.error);
+      doc.text("Limitations: ", margin, y);
+      doc.setFont(undefined, "normal");
+      doc.setTextColor(80, 80, 80);
+      const limLines = doc.splitTextToSize(mInfo.weaknesses, cw - 20);
+      doc.text(limLines, margin + 20, y);
+      y += limLines.length * 3.5 + 6;
+
+      // Feature-by-feature rationale
+      if (explainData?.breakdown) {
+        if (y > 220) { doc.addPage(); y = 20; }
+
+        doc.setTextColor(...colors.dark);
+        doc.setFontSize(8);
+        doc.setFont(undefined, "bold");
+        doc.text("Price Rationale (Feature-by-Feature)", margin, y);
+        y += 5;
+
+        doc.setFontSize(6.5);
+        doc.setFont(undefined, "normal");
+        explainData.breakdown.forEach((b) => {
+          if (y > 275) { doc.addPage(); y = 20; }
+          const explanation = formatContribution(b);
+          const col = b.direction === "positive" ? colors.success : colors.error;
+
+          doc.setTextColor(...col);
+          doc.setFont(undefined, "bold");
+          const sign = b.contribution > 0 ? "+" : "";
+          doc.text(`${b.feature}: ${sign}Rs ${b.contribution.toFixed(2)} L`, margin + 2, y);
+          y += 3.5;
+          doc.setFont(undefined, "normal");
+          doc.setTextColor(80, 80, 80);
+          const expLines = doc.splitTextToSize(explanation, cw - 4);
+          doc.text(expLines, margin + 2, y);
+          y += expLines.length * 3 + 3;
+        });
+      }
+
+      // Training data context
+      if (y > 250) { doc.addPage(); y = 20; }
+      y += 2;
+      doc.setFillColor(...colors.bg);
+      doc.roundedRect(margin, y - 3, cw, 14, 2, 2, "F");
+      doc.setFontSize(7);
+      doc.setTextColor(...colors.dark);
+      doc.setFont(undefined, "bold");
+      doc.text("Training Data: ", margin + 3, y + 2);
+      doc.setFont(undefined, "normal");
+      doc.setTextColor(...colors.muted);
+      doc.text("9,200+ samples | 262 features | 178 locations | 5-fold CV + GridSearchCV optimization", margin + 28, y + 2);
+      doc.text("Final model retrained on complete dataset for maximum prediction accuracy.", margin + 3, y + 8);
+      y += 18;
+    }
+
     // ── Model Comparison ──
     if (compareData?.comparisons) {
       if (y > 230) { doc.addPage(); y = 20; }

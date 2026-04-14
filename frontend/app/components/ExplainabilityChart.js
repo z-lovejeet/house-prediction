@@ -28,7 +28,8 @@ export default function ExplainabilityChart({ result, form, selectedModel }) {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             area: Number(form.area), bedrooms: Number(form.bedrooms),
-            bathrooms: Number(form.bathrooms), location: form.location,
+            bathrooms: Number(form.bathrooms), balcony: form.balcony ? Number(form.balcony) : 1,
+            location: form.location,
             model: selectedModel,
           }),
         });
