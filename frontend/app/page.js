@@ -45,9 +45,22 @@ export default function Home() {
       </section>
 
       {/* ── Footer ─────────────────────────────────────────────── */}
-      <footer className="py-5 text-center text-xs text-muted/60 border-t border-border">
-        <p>Built with Next.js + FastAPI + scikit-learn</p>
-        <p className="mt-0.5">CSE275 Project &mdash; House Price Prediction System</p>
+      <footer className="py-8 mt-4 text-center border-t border-border bg-card/30">
+        <div className="max-w-3xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="text-left">
+            <p className="text-sm font-semibold text-foreground/80">CSE275 Project</p>
+            <p className="text-xs text-muted mt-1">House Price Prediction System</p>
+          </div>
+          
+          <div className="flex flex-col items-center md:items-end">
+            <p className="text-[11px] font-medium text-primary/70 uppercase tracking-widest mb-1">
+              Developed By
+            </p>
+            <p className="text-sm font-medium text-foreground/90">
+              Lovejeet Singh <span className="text-muted/40 mx-1">|</span> Mohammad Asim
+            </p>
+          </div>
+        </div>
       </footer>
     </main>
   );
