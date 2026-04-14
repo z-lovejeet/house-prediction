@@ -6,6 +6,12 @@ import ModelSelector from "./ModelSelector";
 import ComparisonTable from "./ComparisonTable";
 import ModelCharts from "./ModelCharts";
 import InsightsPanel from "./InsightsPanel";
+import SensitivitySliders from "./SensitivitySliders";
+import ExplainabilityChart from "./ExplainabilityChart";
+import PredictionHistory, { addToHistory } from "./PredictionHistory";
+import LocationHeatmap from "./LocationHeatmap";
+import InputWarnings from "./InputWarnings";
+import PDFExport from "./PDFExport";
 import {
   IconArea, IconBed, IconBath, IconLocation, IconSpinner, IconBolt, IconCrown,
 } from "./icons";
@@ -23,6 +29,7 @@ export default function PredictionForm() {
   const [models, setModels] = useState([]);
   const [result, setResult] = useState(null);
   const [compareData, setCompareData] = useState(null);
+  const [explainData, setExplainData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [comparing, setComparing] = useState(false);
   const [error, setError] = useState(null);
@@ -46,7 +53,20 @@ export default function PredictionForm() {
     setForm({ area: "", bedrooms: "", bathrooms: "", location: "" });
     setResult(null);
     setCompareData(null);
+    setExplainData(null);
     setError(null);
+  }, []);
+
+  const handleReuse = useCallback((entry) => {
+    setForm({
+      area: String(entry.area),
+      bedrooms: String(entry.bedrooms),
+      bathrooms: String(entry.bathrooms),
+      location: entry.location,
+    });
+    setResult(null);
+    setCompareData(null);
+    setExplainData(null);
   }, []);
 
   const validate = () => {
@@ -62,22 +82,42 @@ export default function PredictionForm() {
     const err = validate();
     if (err) return setError(err);
 
-    setLoading(true); setError(null); setResult(null);
+    setLoading(true); setError(null); setResult(null); setExplainData(null);
 
     try {
+      const body = {
+        area: Number(form.area), bedrooms: Number(form.bedrooms),
+        bathrooms: Number(form.bathrooms), location: form.location, model: selectedModel,
+      };
       const res = await fetch(`${API_URL}/predict`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          area: Number(form.area), bedrooms: Number(form.bedrooms),
-          bathrooms: Number(form.bathrooms), location: form.location, model: selectedModel,
-        }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => null);
         throw new Error(d?.detail?.[0]?.msg || d?.detail || `Server error ${res.status}`);
       }
-      setResult(await res.json());
+      const data = await res.json();
+      setResult(data);
+
+      // Save to history
+      addToHistory({
+        predicted_price: data.predicted_price,
+        model_used: data.model_used,
+        area: form.area, bedrooms: form.bedrooms,
+        bathrooms: form.bathrooms, location: form.location,
+      });
+      window.dispatchEvent(new Event("prediction_added"));
+
+      // Fetch explanation in background
+      fetch(`${API_URL}/explain`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+        .then((r) => r.json())
+        .then(setExplainData)
+        .catch(() => {});
+
     } catch (e) {
       setError(e.message.includes("fetch") ? "Cannot connect to backend. Is it running?" : e.message);
     } finally { setLoading(false); }
@@ -91,8 +131,7 @@ export default function PredictionForm() {
 
     try {
       const res = await fetch(`${API_URL}/compare`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           area: Number(form.area), bedrooms: Number(form.bedrooms),
           bathrooms: Number(form.bathrooms), location: form.location,
@@ -111,7 +150,6 @@ export default function PredictionForm() {
     key?.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())
       .replace("Elasticnet", "ElasticNet").replace("Linear", "Linear Regression");
 
-  /* ── Input field config ───────────────────────────────────── */
   const inputClass = `w-full px-4 py-3 rounded-xl bg-background border border-border
     placeholder:text-muted/50 focus:outline-none focus:ring-2
     focus:ring-primary/30 focus:border-primary text-foreground transition-all`;
@@ -164,6 +202,11 @@ export default function PredictionForm() {
           </div>
         </div>
 
+        {/* Input Warnings */}
+        <div className="mt-3">
+          <InputWarnings form={form} />
+        </div>
+
         {error && (
           <div className="mt-3 px-4 py-2.5 rounded-xl bg-error-bg border border-error/15
                           text-error text-sm animate-fade-in-up">
@@ -173,11 +216,11 @@ export default function PredictionForm() {
 
         <div className="flex gap-3 mt-5">
           <button type="submit" disabled={loading}
-            className="flex-1 py-3 rounded-xl font-semibold text-white
+            className="flex-1 py-3 rounded-xl font-semibold text-white text-sm
                        bg-gradient-to-r from-gradient-start to-gradient-end
                        hover:shadow-lg hover:shadow-primary-glow
                        active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
-                       transition-all cursor-pointer text-sm">
+                       transition-all cursor-pointer">
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <IconSpinner className="w-4 h-4" /> Predicting...
@@ -195,15 +238,15 @@ export default function PredictionForm() {
           </button>
 
           <button type="button" onClick={handleReset}
-            className="px-4 py-3 rounded-xl font-medium border border-border
+            className="px-4 py-3 rounded-xl font-medium border border-border text-sm
                        text-muted hover:bg-card-hover hover:text-foreground
-                       active:scale-[0.98] transition-all cursor-pointer text-sm">
+                       active:scale-[0.98] transition-all cursor-pointer">
             Reset
           </button>
         </div>
       </form>
 
-      {/* ── Result ──────────────────────────────────────────── */}
+      {/* ── Result Card ─────────────────────────────────────── */}
       {result && price && (
         <div className="animate-fade-in-up">
           <div className="bg-card border border-success/20 rounded-2xl p-6 result-glow text-center">
@@ -236,12 +279,37 @@ export default function PredictionForm() {
             <p className="mt-2 text-[11px] text-muted/60">
               ≈ ₹ {((result.predicted_price * 100000) / Number(form.area)).toLocaleString("en-IN", { maximumFractionDigits: 0 })}/sqft
             </p>
+
+            {/* PDF Export */}
+            <div className="mt-4 flex justify-center">
+              <PDFExport
+                result={result} form={form} models={models}
+                compareData={compareData} explainData={explainData}
+              />
+            </div>
           </div>
         </div>
       )}
 
+      {/* ── Explainability ──────────────────────────────────── */}
+      <ExplainabilityChart result={result} form={form} selectedModel={selectedModel} />
+
+      {/* ── Sensitivity ─────────────────────────────────────── */}
+      <SensitivitySliders baseResult={result} form={form} selectedModel={selectedModel} />
+
+      {/* ── Comparison Table ────────────────────────────────── */}
       {compareData && <ComparisonTable data={compareData} onClose={() => setCompareData(null)} />}
+
+      {/* ── Charts ──────────────────────────────────────────── */}
       {models.length > 0 && <ModelCharts compareData={compareData} models={models} />}
+
+      {/* ── Prediction History ──────────────────────────────── */}
+      <PredictionHistory onReuse={handleReuse} />
+
+      {/* ── Location Heatmap ────────────────────────────────── */}
+      <LocationHeatmap />
+
+      {/* ── Insights Panel ──────────────────────────────────── */}
       <InsightsPanel />
     </div>
   );

@@ -333,3 +333,165 @@ def compare_all(house: HouseInput):
         "comparisons": results,
         "best_model": best_key,
     }
+
+
+@app.post("/explain", tags=["Analysis"])
+def explain_prediction(house: HouseInput):
+    """Break down a prediction into per-feature contributions (waterfall)."""
+    model_key = house.model or _get_best_model_key()
+    if model_key not in MODEL_REGISTRY:
+        raise HTTPException(status_code=400, detail=f"Unknown model '{model_key}'")
+
+    global _scaler, _feature_columns
+    if _scaler is None:
+        _scaler, _feature_columns = _load_shared_artefacts()
+
+    info = MODEL_REGISTRY[model_key]
+    model = info["model"]
+
+    # Build feature row (same as _predict_with_model)
+    input_row = pd.DataFrame(np.zeros((1, len(_feature_columns))), columns=_feature_columns)
+    input_row["total_sqft"] = float(house.area)
+    input_row["bath"] = float(house.bathrooms)
+    input_row["bhk"] = int(house.bedrooms)
+    input_row["balcony"] = float(house.balcony)
+
+    loc_col = f"location_{house.location.strip()}"
+    if loc_col in input_row.columns:
+        input_row[loc_col] = 1.0
+
+    # Scale numerics
+    num_cols = ["total_sqft", "bath", "balcony", "bhk"]
+    num_present = [c for c in num_cols if c in input_row.columns]
+    input_row[num_present] = _scaler.transform(input_row[num_present])
+
+    # Compute per-feature contributions: coeff_i * x_i
+    values = input_row.values[0]
+    coeffs = model.coef_
+    intercept = float(model.intercept_)
+    contributions = coeffs * values
+
+    # Aggregate into categories
+    feature_labels = {
+        "total_sqft": "Area (sqft)",
+        "bath": "Bathrooms",
+        "bhk": "Bedrooms (BHK)",
+        "balcony": "Balcony",
+    }
+
+    breakdown = []
+    location_contrib = 0.0
+
+    for i, col in enumerate(_feature_columns):
+        contrib = float(contributions[i])
+        if col in feature_labels:
+            breakdown.append({
+                "feature": feature_labels[col],
+                "contribution": round(contrib, 2),
+                "direction": "positive" if contrib >= 0 else "negative",
+            })
+        elif col.startswith("location_") and abs(contrib) > 0.001:
+            location_contrib += contrib
+
+    breakdown.append({
+        "feature": f"Location ({house.location})",
+        "contribution": round(location_contrib, 2),
+        "direction": "positive" if location_contrib >= 0 else "negative",
+    })
+
+    breakdown.append({
+        "feature": "Base Price (Intercept)",
+        "contribution": round(intercept, 2),
+        "direction": "positive" if intercept >= 0 else "negative",
+    })
+
+    # Sort by absolute contribution
+    breakdown.sort(key=lambda x: abs(x["contribution"]), reverse=True)
+
+    predicted = round(float(model.predict(input_row)[0]), 2)
+
+    return {
+        "status": "success",
+        "model_used": model_key,
+        "predicted_price": predicted,
+        "breakdown": breakdown,
+        "total": predicted,
+    }
+
+
+@app.get("/locations/stats", tags=["Analysis"])
+def location_stats():
+    """Return average price and count per location for heatmap."""
+    X = pd.read_csv(os.path.join(PROCESSED_DIR, "X_processed.csv"))
+    y = pd.read_csv(os.path.join(PROCESSED_DIR, "y_target.csv")).squeeze()
+
+    location_cols = [c for c in X.columns if c.startswith("location_")]
+    stats = []
+
+    for col in location_cols:
+        mask = X[col] == 1
+        if mask.sum() > 0:
+            name = col.replace("location_", "")
+            avg_price = round(float(y[mask].mean()), 2)
+            count = int(mask.sum())
+            stats.append({
+                "location": name,
+                "avg_price": avg_price,
+                "count": count,
+            })
+
+    stats.sort(key=lambda x: x["avg_price"], reverse=True)
+
+    return {
+        "status": "success",
+        "locations": stats,
+        "total_locations": len(stats),
+    }
+
+
+@app.get("/data/stats", tags=["Analysis"])
+def data_stats():
+    """Return distribution stats for input validation warnings."""
+    X = pd.read_csv(os.path.join(PROCESSED_DIR, "X_processed.csv"))
+
+    # Inverse-transform to get original scale
+    scaler_path = os.path.join(PROCESSED_DIR, "scaler.pkl")
+    with open(scaler_path, "rb") as f:
+        sc = pickle.load(f)
+
+    num_cols = ["total_sqft", "bath", "balcony", "bhk"]
+    original = X[num_cols].copy()
+    original[num_cols] = sc.inverse_transform(original[num_cols])
+
+    return {
+        "status": "success",
+        "distributions": {
+            "area": {
+                "min": round(float(original["total_sqft"].min()), 0),
+                "max": round(float(original["total_sqft"].max()), 0),
+                "mean": round(float(original["total_sqft"].mean()), 0),
+                "q25": round(float(original["total_sqft"].quantile(0.25)), 0),
+                "q75": round(float(original["total_sqft"].quantile(0.75)), 0),
+                "median": round(float(original["total_sqft"].median()), 0),
+            },
+            "bedrooms": {
+                "min": int(original["bhk"].min()),
+                "max": int(original["bhk"].max()),
+                "mean": round(float(original["bhk"].mean()), 1),
+                "median": int(original["bhk"].median()),
+                "typical_min": 1,
+                "typical_max": 5,
+            },
+            "bathrooms": {
+                "min": int(original["bath"].min()),
+                "max": int(original["bath"].max()),
+                "mean": round(float(original["bath"].mean()), 1),
+                "median": int(original["bath"].median()),
+            },
+            "sqft_per_bhk": {
+                "typical_min": 300,
+                "typical_max": 800,
+                "ideal": 500,
+            },
+        },
+    }
