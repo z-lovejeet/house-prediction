@@ -81,10 +81,10 @@
     .signature-block div { flex: 1; }
     .chapter-title { text-align: center; font-size: 1.6rem; color: #1e3a5f; border-left: none; padding-left: 0; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px; }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 20px 0; page-break-inside: avoid; break-inside: avoid; }
-    .stat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; text-align: center; }
-    .stat-card .num { font-size: 1.8rem; font-weight: bold; color: #1e3a5f; }
-    .stat-card .label { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+    .stats-grid { display: flex; justify-content: space-between; gap: 16px; margin: 20px 0; page-break-inside: avoid; break-inside: avoid; }
+    .stat-card { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; text-align: center; page-break-inside: avoid; }
+    .stat-card .num { font-size: 1.8rem; font-weight: bold; color: #1e3a5f; line-height: 1.2; }
+    .stat-card .label { font-size: 0.85rem; color: #64748b; margin-top: 4px; display: block; }
 
     .qa-box { background: #f0fdfa; border-left: 4px solid #0d9488; padding: 16px 18px; margin: 14px 0; border-radius: 0 6px 6px 0; }
     .qa-q { font-weight: bold; color: #0f766e; margin-bottom: 6px; font-size: 1.05em; }
@@ -489,22 +489,44 @@
 <h3>4.1 Data Cleaning Pipeline</h3>
 <div class="mermaid-wrapper">
   <div class="mermaid">
-    flowchart LR
-      A["📥 Raw Data<br/>13,320 × 9 columns<br/>Bengaluru House Data CSV"] --> B["🔄 Drop Duplicates<br/>529 duplicates removed<br/>12,791 records remain"]
-      B --> C["🩹 Handle Missing Values<br/>society dropped (41%)<br/>bath, balcony filled (median)"]
-      C --> D["📐 Fix total_sqft<br/>Convert ranges to avg<br/>e.g. '1000-1200' → 1100"]
-      D --> E["🏠 Extract BHK<br/>Parse 'size' column<br/>'3 BHK' → bhk = 3"]
-      E --> F["💰 Compute price_per_sqft<br/>price × 100000 / sqft<br/>New derived feature"]
-      F --> G["✂️ Remove Outliers<br/>Business logic + ±1σ filter<br/>3,572 anomalies removed"]
-      G --> H["✅ Clean Dataset<br/>9,219 × 7 columns<br/>Ready for modeling"]
-      style A fill:#fef3c7,stroke:#f59e0b,color:#92400e
-      style B fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
-      style C fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
-      style D fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
-      style E fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
-      style F fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
-      style G fill:#fee2e2,stroke:#ef4444,color:#991b1b
-      style H fill:#dcfce7,stroke:#22c55e,color:#166534
+    flowchart TD
+      Raw["📥 Raw Dataset<br/>(13,320 × 9 columns)<br/>Bengaluru House Data"] 
+      
+      subgraph Phase1 ["Phase 1: Initial Cleaning"]
+        Dup["🔄 Remove Duplicates<br/>Dropped 529 identical rows"]
+        Miss["🩹 Missing Values<br/>Dropped 'society' (41% missing)<br/>Median Imputation for bath/balcony"]
+      end
+      
+      subgraph Phase2 ["Phase 2: Feature Extraction"]
+        Sqft["📐 Format total_sqft<br/>Convert 'min-max' ranges to avg.<br/>Ignore unparseable strings"]
+        BHK["🏠 Extract BHK<br/>Parse numerical value from<br/>'size' column (e.g. '3 BHK')"]
+        PPS["💰 compute price_per_sqft<br/>price × 100,000 ÷ total_sqft<br/>(Crucial metric for outlier tech)"]
+      end
+      
+      subgraph Phase3 ["Phase 3: Outlier Eradication"]
+        Biz["✂️ Business Logic Limits<br/>total_sqft / bhk < 300<br/>Filters impossible properties"]
+        Stat["📉 Statistical Trimming<br/>Price per sqft within ±1σ<br/>Groups by unique location"]
+      end
+
+      Clean["✅ Final High-Quality Dataset<br/>(9,219 × 7 columns)<br/>Ready for Scaling & Modeling"]
+      
+      Raw --> Phase1
+      Phase1 --> Phase2
+      Phase2 --> Phase3
+      Phase3 --> Clean
+
+      style Raw fill:#fef3c7,stroke:#f59e0b,color:#92400e
+      style Clean fill:#dcfce7,stroke:#22c55e,color:#166534
+      style Phase1 fill:#f8fafc,stroke:#cbd5e1,stroke-dasharray: 5 5,color:#475569
+      style Phase2 fill:#f8fafc,stroke:#cbd5e1,stroke-dasharray: 5 5,color:#475569
+      style Phase3 fill:#fee2e2,stroke:#ef4444,stroke-dasharray: 5 5,color:#991b1b
+      style Biz fill:#fff,stroke:#cbd5e1
+      style Stat fill:#fff,stroke:#cbd5e1
+      style Dup fill:#fff,stroke:#cbd5e1
+      style Miss fill:#fff,stroke:#cbd5e1
+      style Sqft fill:#fff,stroke:#cbd5e1
+      style BHK fill:#fff,stroke:#cbd5e1
+      style PPS fill:#fff,stroke:#cbd5e1
   </div>
 </div>
 <p class="fig-caption">Fig 6: Complete Data Cleaning Pipeline — From 13,320 Raw Records to 9,219 High-Quality Samples</p>
