@@ -19,13 +19,15 @@
       background: #f6f7fb; color: #1e293b; line-height: 1.8; font-size: 13pt; padding: 0;
     }
     @media print {
-      body { background: #fff; padding: 0; font-size: 12pt; }
+      @page { margin: 25px; }
+      body { background: #fff; padding: 0; font-size: 12pt; margin: 0; }
       .page-break-formal { page-break-before: always; }
       .no-print { display: none !important; }
       .container { border: none; box-shadow: none; padding: 30px 40px; }
       table { break-inside: auto; }
       .box { break-inside: avoid; }
       .mermaid-wrapper { break-inside: auto; }
+      .stats-grid { break-inside: avoid; }
       .chapter-title { margin-top: 20px; margin-bottom: 16px; }
       h3 { margin-top: 18px; }
     }
@@ -35,11 +37,11 @@
       box-shadow: 0 4px 24px rgba(0,0,0,0.06);
     }
     .title-page {
-      text-align: center; padding: 80px 0 60px;
-      border-bottom: 3px solid #1e3a5f; margin-bottom: 40px;
+      text-align: center; padding: 20px 0 20px;
+      border-bottom: 3px solid #1e3a5f; margin-bottom: 30px;
     }
-    .title-page h1 { font-size: 2.2rem; color: #1e3a5f; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
-    .title-page .subtitle { font-size: 1.1rem; color: #475569; margin-bottom: 36px; }
+    .title-page p { text-align: center !important; }
+    .title-page h1 { font-size: 1.8rem; color: #1e3a5f; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
     .title-page .meta { font-size: 0.95rem; color: #64748b; }
     .title-page .meta span { display: block; margin: 4px 0; }
 
@@ -79,7 +81,7 @@
     .signature-block div { flex: 1; }
     .chapter-title { text-align: center; font-size: 1.6rem; color: #1e3a5f; border-left: none; padding-left: 0; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px; }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 20px 0; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 20px 0; page-break-inside: avoid; break-inside: avoid; }
     .stat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; text-align: center; }
     .stat-card .num { font-size: 1.8rem; font-weight: bold; color: #1e3a5f; }
     .stat-card .label { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
@@ -98,27 +100,27 @@
 <!-- TITLE PAGE -->
 <!-- ══════════════════════════════════════════════════════════ -->
 <div class="title-page">
-  <p style="font-size: 1rem; color: #64748b; margin-bottom: 60px;">CA-CSE275 — Machine Learning Project</p>
-  <h1>House Price Prediction Using<br>Regularized Regression Models</h1>
-  <p class="subtitle">Linear Regression, Ridge (L2), Lasso (L1), and ElasticNet</p>
+  <h1 style="margin-top: 0;">House Price Prediction Using<br>Regularized Regression Models</h1>
 
-  <div style="margin: 40px 0; text-align: center;">
-    <p style="font-size: 1rem; color: #475569; margin-bottom: 8px;">This is Submitted By:</p>
-    <p style="font-size: 1.15rem; font-weight: bold; color: #1e293b;">Lovejeet Singh (12521613)</p>
-    <p style="font-size: 1.15rem; font-weight: bold; color: #1e293b;">Mohammad Asim (12518421)</p>
-  </div>
-
-  <p style="font-size: 1rem; color: #475569; margin-top: 10px;">Section-324QP</p>
-
-  <div style="margin-top: 40px;">
-    <p style="color: #475569;">Under the Guidance of</p>
+  <div style="margin: 30px 0;">
+    <p style="font-size: 0.95rem; color: #475569; margin-bottom: 4px;">This is Submitted By:</p>
+    <p style="font-size: 1.05rem; font-weight: bold; color: #1e293b; margin-bottom: 2px;">Lovejeet Singh (12521613)</p>
+    <p style="font-size: 1.05rem; font-weight: bold; color: #1e293b; margin-bottom: 20px;">Mohammad Asim (12518421)</p>
+    
+    <p style="font-size: 1rem; color: #475569; font-weight: bold; margin-bottom: 20px;">Section-324QP</p>
+    
+    <p style="color: #475569; font-size: 0.95rem; margin-bottom: 4px;">Under the Guidance of</p>
     <p style="font-size: 1.1rem; font-weight: bold; color: #1e293b;">Mr. Abhinav Singh</p>
   </div>
 
-  <div style="margin-top: 60px; color: #64748b;">
-    <p><strong>School of Computing & Artificial Intelligence</strong></p>
-    <p>Lovely Professional University, Phagwara</p>
-    <p style="margin-top: 10px;">January – April 2026</p>
+  <div style="margin: 20px 0;">
+    <img src="lpu logo.jpg" alt="Lovely Professional University Logo" style="max-width: 245px; height: auto; display: inline-block;">
+  </div>
+
+  <div style="margin-top: 25px; color: #1e293b;">
+    <p style="font-size: 1.1rem; font-weight: bold; margin-bottom: 4px;">School of Computing & Artificial Intelligence</p>
+    <p style="font-size: 1rem; margin-bottom: 4px;">Lovely Professional University, Phagwara</p>
+    <p style="margin-top: 8px; color: #64748b; font-size: 0.9rem;">January – April 2026</p>
   </div>
 </div>
 
@@ -213,10 +215,10 @@
 <h2 class="chapter-title">Table of Contents</h2>
 <table style="border: none;">
   <tbody>
-    <tr><td style="border:none;">Declaration</td><td style="border:none; text-align:right;">ii</td></tr>
-    <tr><td style="border:none;">Certificate</td><td style="border:none; text-align:right;">iii</td></tr>
-    <tr><td style="border:none;">Acknowledgement</td><td style="border:none; text-align:right;">iv</td></tr>
-    <tr><td style="border:none;">Abstract</td><td style="border:none; text-align:right;">v</td></tr>
+    <tr><td style="border:none;">Declaration</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none;">Certificate</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none;">Acknowledgement</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none;">Abstract</td><td style="border:none;"></td></tr>
     <tr><td style="border:none;"><strong>Chapter 1: Introduction</strong></td><td style="border:none;"></td></tr>
     <tr><td style="border:none; padding-left:30px;">1.1 Background</td><td style="border:none;"></td></tr>
     <tr><td style="border:none; padding-left:30px;">1.2 Problem Statement</td><td style="border:none;"></td></tr>
@@ -485,21 +487,27 @@
 <h2 class="chapter-title">Chapter 4<br>Data Preprocessing & Feature Engineering</h2>
 
 <h3>4.1 Data Cleaning Pipeline</h3>
-<div class="mermaid-wrapper" style="transform: scale(0.82); transform-origin: top center;">
+<div class="mermaid-wrapper">
   <div class="mermaid">
-    flowchart TD
-      A["Raw Data: 13,320 × 9"] --> B["Drop 529 Duplicates"]
-      B --> C["Handle Missing Values"]
-      C --> D["Fix total_sqft Ranges"]
-      D --> E["Extract BHK from size"]
-      E --> F["Compute price_per_sqft"]
-      F --> G["Remove Outliers"]
-      G --> H["Clean: 9,219 rows"]
-      style A fill:#fef3c7,stroke:#f59e0b
-      style H fill:#dcfce7,stroke:#22c55e
+    flowchart LR
+      A["📥 Raw Data<br/>13,320 × 9 columns<br/>Bengaluru House Data CSV"] --> B["🔄 Drop Duplicates<br/>529 duplicates removed<br/>12,791 records remain"]
+      B --> C["🩹 Handle Missing Values<br/>society dropped (41%)<br/>bath, balcony filled (median)"]
+      C --> D["📐 Fix total_sqft<br/>Convert ranges to avg<br/>e.g. '1000-1200' → 1100"]
+      D --> E["🏠 Extract BHK<br/>Parse 'size' column<br/>'3 BHK' → bhk = 3"]
+      E --> F["💰 Compute price_per_sqft<br/>price × 100000 / sqft<br/>New derived feature"]
+      F --> G["✂️ Remove Outliers<br/>Business logic + ±1σ filter<br/>3,572 anomalies removed"]
+      G --> H["✅ Clean Dataset<br/>9,219 × 7 columns<br/>Ready for modeling"]
+      style A fill:#fef3c7,stroke:#f59e0b,color:#92400e
+      style B fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+      style C fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+      style D fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+      style E fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+      style F fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+      style G fill:#fee2e2,stroke:#ef4444,color:#991b1b
+      style H fill:#dcfce7,stroke:#22c55e,color:#166534
   </div>
 </div>
-<p class="fig-caption">Fig 6: Complete Data Cleaning Pipeline — From 13,320 to 9,219 High-Quality Records</p>
+<p class="fig-caption">Fig 6: Complete Data Cleaning Pipeline — From 13,320 Raw Records to 9,219 High-Quality Samples</p>
 
 <h3>4.2 Outlier Removal</h3>
 <p>Two-stage outlier removal strategy was applied:</p>
