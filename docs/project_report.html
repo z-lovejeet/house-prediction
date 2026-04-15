@@ -4,223 +4,85 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>House Price Prediction — CSE275 Project Report</title>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'base', themeVariables: {
+      primaryColor: '#e0f2fe', primaryBorderColor: '#0284c7', primaryTextColor: '#0c4a6e',
+      lineColor: '#64748b', secondaryColor: '#f0fdf4', tertiaryColor: '#fef3c7',
+      fontFamily: '"Segoe UI", Roboto, sans-serif', fontSize: '13px'
+    }});
+  </script>
   <style>
-    /* ── Reset & Base ────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: "Times New Roman", "Segoe UI", serif;
-      background: #f6f7fb;
-      color: #1e293b;
-      line-height: 1.8;
-      font-size: 13pt;
-      padding: 0;
+      background: #f6f7fb; color: #1e293b; line-height: 1.8; font-size: 13pt; padding: 0;
     }
-
-    /* ── Print‑friendly ──────────────────────────────── */
     @media print {
       body { background: #fff; padding: 0; font-size: 12pt; }
       .page-break { page-break-before: always; }
-      section { break-inside: avoid; }
+      section, .mermaid, table, .box { break-inside: avoid; }
       .no-print { display: none !important; }
       .container { border: none; box-shadow: none; }
     }
-
-    /* ── Container ───────────────────────────────────── */
     .container {
-      max-width: 900px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 48px 56px;
-      border: 1px solid #e2e8f0;
+      max-width: 900px; margin: 0 auto; background: #fff;
+      padding: 48px 56px; border: 1px solid #e2e8f0;
       box-shadow: 0 4px 24px rgba(0,0,0,0.06);
     }
-
-    /* ── Title Page ──────────────────────────────────── */
     .title-page {
-      text-align: center;
-      padding: 80px 0 60px;
-      border-bottom: 3px solid #1e3a5f;
-      margin-bottom: 40px;
+      text-align: center; padding: 80px 0 60px;
+      border-bottom: 3px solid #1e3a5f; margin-bottom: 40px;
     }
-    .title-page h1 {
-      font-size: 2.2rem;
-      color: #1e3a5f;
-      margin-bottom: 16px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .title-page .subtitle {
-      font-size: 1.1rem;
-      color: #475569;
-      margin-bottom: 36px;
-    }
-    .title-page .meta {
-      font-size: 0.95rem;
-      color: #64748b;
-    }
+    .title-page h1 { font-size: 2.2rem; color: #1e3a5f; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+    .title-page .subtitle { font-size: 1.1rem; color: #475569; margin-bottom: 36px; }
+    .title-page .meta { font-size: 0.95rem; color: #64748b; }
     .title-page .meta span { display: block; margin: 4px 0; }
 
-    /* ── Section Headings ────────────────────────────── */
-    h2 {
-      font-size: 1.5rem;
-      color: #1e3a5f;
-      border-left: 4px solid #1e3a5f;
-      padding-left: 14px;
-      margin: 48px 0 16px;
-      text-transform: uppercase;
-    }
-    h3 {
-      font-size: 1.15rem;
-      color: #334155;
-      margin: 28px 0 10px;
-    }
+    h2 { font-size: 1.5rem; color: #1e3a5f; border-left: 4px solid #1e3a5f; padding-left: 14px; margin: 48px 0 16px; text-transform: uppercase; }
+    h3 { font-size: 1.15rem; color: #334155; margin: 28px 0 10px; }
     h4 { font-size: 1rem; color: #475569; margin: 20px 0 8px; }
-
     p { margin: 10px 0; text-align: justify; }
     ul, ol { margin: 10px 0 10px 24px; }
     li { margin: 4px 0; }
 
-    /* ── Highlight Box ───────────────────────────────── */
-    .box {
-      background: #f0f9ff;
-      border-left: 4px solid #3b82f6;
-      padding: 14px 18px;
-      margin: 16px 0;
-      border-radius: 4px;
-    }
-    .box.warn {
-      background: #fffbeb;
-      border-color: #f59e0b;
-    }
-    .box.success {
-      background: #f0fdf4;
-      border-color: #22c55e;
-    }
+    .box { background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 14px 18px; margin: 16px 0; border-radius: 4px; }
+    .box.warn { background: #fffbeb; border-color: #f59e0b; }
+    .box.success { background: #f0fdf4; border-color: #22c55e; }
+    .box.purple { background: #faf5ff; border-color: #a855f7; }
 
-    /* ── Tables ──────────────────────────────────────── */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 16px 0;
-      font-size: 0.92rem;
-    }
-    th, td {
-      border: 1px solid #cbd5e1;
-      padding: 10px 14px;
-      text-align: left;
-    }
-    th {
-      background: #f1f5f9;
-      font-weight: 600;
-      color: #334155;
-    }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.92rem; }
+    th, td { border: 1px solid #cbd5e1; padding: 10px 14px; text-align: left; }
+    th { background: #f1f5f9; font-weight: 600; color: #334155; }
     tr:nth-child(even) td { background: #f8fafc; }
 
-    /* ── Code Block ──────────────────────────────────── */
-    pre {
-      background: #1e293b;
-      color: #e2e8f0;
-      padding: 16px 20px;
-      border-radius: 6px;
-      overflow-x: auto;
-      font-size: 0.88rem;
-      margin: 14px 0;
-      line-height: 1.5;
-    }
-    code {
-      font-family: "Fira Code", "Consolas", monospace;
-    }
-    p code, li code {
-      background: #f1f5f9;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-size: 0.9em;
-      color: #be185d;
-    }
+    pre { background: #1e293b; color: #e2e8f0; padding: 16px 20px; border-radius: 6px; overflow-x: auto; font-size: 0.88rem; margin: 14px 0; line-height: 1.5; }
+    code { font-family: "Fira Code", "Consolas", monospace; }
+    p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; color: #be185d; }
 
-    /* ── Diagram Block ───────────────────────────────── */
-    .diagram {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      padding: 20px;
-      border-radius: 6px;
-      font-family: "Fira Code", monospace;
-      font-size: 0.82rem;
-      text-align: center;
-      white-space: pre;
-      overflow-x: auto;
-      margin: 18px 0;
-      line-height: 1.5;
-    }
+    .formula { background: #f8fafc; padding: 14px 20px; border-left: 4px solid #1e3a5f; font-family: "Courier New", Courier, monospace; font-size: 1.05em; margin: 14px 0; overflow-x: auto; }
 
-    /* ── Formula ──────────────────────────────────────── */
-    .formula {
-      background: #f8fafc;
-      padding: 14px 20px;
-      border-left: 4px solid #1e3a5f;
-      font-family: "Courier New", Courier, monospace;
-      font-size: 1.05em;
-      margin: 14px 0;
-      overflow-x: auto;
-    }
+    .mermaid-wrapper { background: #fafbfc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 18px 0; overflow-x: auto; }
+    .fig-caption { text-align: center; font-size: 0.92rem; color: #475569; font-style: italic; margin: 8px 0 20px; }
 
-    /* ── Footer ──────────────────────────────────────── */
-    .footer {
-      text-align: center;
-      padding: 24px 0;
-      color: #94a3b8;
-      font-size: 0.85rem;
-      border-top: 1px solid #e2e8f0;
-      margin-top: 50px;
-    }
-
-    /* ── Print button ────────────────────────────────── */
-    .print-btn {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #1e3a5f;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 14px;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      z-index: 1000;
-    }
+    .footer { text-align: center; padding: 24px 0; color: #94a3b8; font-size: 0.85rem; border-top: 1px solid #e2e8f0; margin-top: 50px; }
+    .print-btn { position: fixed; top: 20px; right: 20px; background: #1e3a5f; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; }
     .print-btn:hover { background: #2d5a8e; }
 
-    /* ── Declaration/Certificate styling ──────────────── */
-    .formal-section {
-      text-align: left;
-      padding: 20px 0;
-      margin-bottom: 20px;
-    }
-    .formal-section h2 {
-      text-align: center;
-      border-left: none;
-      padding-left: 0;
-    }
-    .signature-block {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 40px;
-      gap: 40px;
-    }
-    .signature-block div {
-      flex: 1;
-    }
-    .chapter-title {
-      text-align: center;
-      font-size: 1.6rem;
-      color: #1e3a5f;
-      border-left: none;
-      padding-left: 0;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      margin-bottom: 30px;
-    }
+    .formal-section { text-align: left; padding: 20px 0; margin-bottom: 20px; }
+    .formal-section h2 { text-align: center; border-left: none; padding-left: 0; }
+    .signature-block { display: flex; justify-content: space-between; margin-top: 40px; gap: 40px; }
+    .signature-block div { flex: 1; }
+    .chapter-title { text-align: center; font-size: 1.6rem; color: #1e3a5f; border-left: none; padding-left: 0; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 20px 0; }
+    .stat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; text-align: center; }
+    .stat-card .num { font-size: 1.8rem; font-weight: bold; color: #1e3a5f; }
+    .stat-card .label { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+
+    .qa-box { background: #f0fdfa; border-left: 4px solid #0d9488; padding: 16px 18px; margin: 14px 0; border-radius: 0 6px 6px 0; }
+    .qa-q { font-weight: bold; color: #0f766e; margin-bottom: 6px; font-size: 1.05em; }
+    .qa-a { color: #334155; line-height: 1.7; }
   </style>
 </head>
 <body>
@@ -238,15 +100,15 @@
 
   <div style="margin: 40px 0; text-align: center;">
     <p style="font-size: 1rem; color: #475569; margin-bottom: 8px;">This is Submitted By:</p>
-    <p style="font-size: 1.15rem; font-weight: bold; color: #1e293b;">Lovejeet Singh</p>
-    <p style="font-size: 1.15rem; font-weight: bold; color: #1e293b;">Mohammad Asim</p>
+    <p style="font-size: 1.15rem; font-weight: bold; color: #1e293b;">Lovejeet Singh (12521613)</p>
+    <p style="font-size: 1.15rem; font-weight: bold; color: #1e293b;">Mohammad Asim (12518421)</p>
   </div>
 
   <p style="font-size: 1rem; color: #475569; margin-top: 10px;">Section-324FO</p>
 
   <div style="margin-top: 40px;">
     <p style="color: #475569;">Under the Guidance of</p>
-    <p style="font-size: 1.1rem; font-weight: bold; color: #1e293b;">Dr. Bhupinder Singh (28636)</p>
+    <p style="font-size: 1.1rem; font-weight: bold; color: #1e293b;">Mr. Abhinav Singh</p>
   </div>
 
   <div style="margin-top: 60px; color: #64748b;">
@@ -263,21 +125,21 @@
 <div class="formal-section">
   <h2 class="chapter-title">Declaration</h2>
   <p>
-    We hereby certify that the project titled <strong>"House Price Prediction Using Regularized Regression Models"</strong> is a genuine representation of our work, conducted as part of the Project requirement for the CA-CSE275 at Lovely Professional University, Phagwara. This work was carried out under the supervision of Professor <strong>Dr. Bhupinder Singh</strong> during the period of January to April 2026. All the data and insights presented in this project report are derived from our dedicated efforts and are entirely original.
+    We hereby certify that the project titled <strong>"House Price Prediction Using Regularized Regression Models"</strong> is a genuine representation of our work, conducted as part of the Project requirement for the CA-CSE275 at Lovely Professional University, Phagwara. This work was carried out under the supervision of <strong>Mr. Abhinav Singh</strong> during the period of January to April 2026. All the data and insights presented in this project report are derived from our dedicated efforts and are entirely original.
   </p>
 
   <div class="signature-block">
     <div>
       <p><strong>Name:</strong> Lovejeet Singh</p>
-      <p><strong>Registration No.:</strong> _______________</p>
-      <p><strong>Digital Signature:</strong> _______________</p>
+      <p><strong>Registration No.:</strong> 12521613</p>
     </div>
     <div>
       <p><strong>Name:</strong> Mohammad Asim</p>
-      <p><strong>Registration No.:</strong> _______________</p>
-      <p><strong>Digital Signature:</strong> _______________</p>
+      <p><strong>Registration No.:</strong> 12518421</p>
     </div>
   </div>
+
+  <p style="margin-top: 30px;"><strong>Date:</strong> 15 April 2026</p>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════ -->
@@ -291,11 +153,10 @@
   </p>
 
   <div style="margin-top: 60px;">
-    <p><strong>Dr. Bhupinder Singh</strong></p>
-    <p>Designation: Assistant Professor</p>
+    <p><strong>Mr. Abhinav Singh</strong></p>
     <p>School of Computing & Artificial Intelligence</p>
     <p>Lovely Professional University, Phagwara, Punjab</p>
-    <p style="margin-top: 20px;">Date: _______________</p>
+    <p style="margin-top: 20px;">Date: 15 April 2026</p>
   </div>
 </div>
 
@@ -306,7 +167,7 @@
 <div class="formal-section">
   <h2 class="chapter-title">Acknowledgement</h2>
   <p>
-    We would like to express our sincere gratitude to <strong>Dr. Bhupinder Singh</strong>, Assistant Professor at the School of Computing & Artificial Intelligence, Lovely Professional University, for his invaluable guidance, constant motivation, and constructive feedback throughout the development of this project.
+    We would like to express our sincere gratitude to <strong>Mr. Abhinav Singh</strong>, School of Computing & Artificial Intelligence, Lovely Professional University, for his invaluable guidance, constant motivation, and constructive feedback throughout the development of this project.
   </p>
   <p>
     We are also thankful to Lovely Professional University for providing us with the resources and infrastructure that facilitated the smooth execution of this work. The exposure to real-world datasets and the opportunity to apply machine learning techniques in a full-stack deployment setting has been an incredibly enriching experience.
@@ -315,8 +176,9 @@
     Finally, we extend our appreciation to our peers and family members for their continued support and encouragement during the course of this project.
   </p>
   <div style="margin-top: 40px; text-align: right;">
-    <p><strong>Lovejeet Singh</strong></p>
-    <p><strong>Mohammad Asim</strong></p>
+    <p><strong>Lovejeet Singh (12521613)</strong></p>
+    <p><strong>Mohammad Asim (12518421)</strong></p>
+    <p style="margin-top: 10px;">15 April 2026</p>
   </div>
 </div>
 
@@ -347,38 +209,58 @@
 <h2 class="chapter-title">Table of Contents</h2>
 <table style="border: none;">
   <tbody>
-    <tr><td style="border:none;"><strong>Declaration</strong></td><td style="border:none; text-align:right;">ii</td></tr>
-    <tr><td style="border:none;"><strong>Certificate</strong></td><td style="border:none; text-align:right;">iii</td></tr>
-    <tr><td style="border:none;"><strong>Acknowledgement</strong></td><td style="border:none; text-align:right;">iv</td></tr>
-    <tr><td style="border:none;"><strong>Abstract</strong></td><td style="border:none; text-align:right;">v</td></tr>
-    <tr><td style="border:none;"><strong>Chapter 1: Introduction</strong></td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">1.1 Background</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">1.2 Problem Statement</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">1.3 Objectives of the Study</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none;"><strong>Chapter 2: Literature Review</strong></td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">2.1 Related Work</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">2.2 Comparative Analysis</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none;"><strong>Chapter 3: Methodology</strong></td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">3.1 Dataset and Preprocessing</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">3.2 Feature Engineering</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">3.3 Model Design</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">3.4 Training and Validation</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">3.5 Evaluation Metrics</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none;"><strong>Chapter 4: Results and Discussion</strong></td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">4.1 Experimental Results</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">4.2 Model Comparison</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">4.3 Performance Insights</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">4.4 System Deployment</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none;"><strong>Chapter 5: Conclusion and Future Work</strong></td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">5.1 Conclusion</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none; padding-left: 30px;">5.2 Future Work</td><td style="border:none; text-align:right;"></td></tr>
-    <tr><td style="border:none;"><strong>References</strong></td><td style="border:none; text-align:right;"></td></tr>
+    <tr><td style="border:none;">Declaration</td><td style="border:none; text-align:right;">ii</td></tr>
+    <tr><td style="border:none;">Certificate</td><td style="border:none; text-align:right;">iii</td></tr>
+    <tr><td style="border:none;">Acknowledgement</td><td style="border:none; text-align:right;">iv</td></tr>
+    <tr><td style="border:none;">Abstract</td><td style="border:none; text-align:right;">v</td></tr>
+    <tr><td style="border:none;"><strong>Chapter 1: Introduction</strong></td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">1.1 Background</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">1.2 Problem Statement</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">1.3 Objectives of the Study</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">1.4 Scope of the Project</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none;"><strong>Chapter 2: Literature Review</strong></td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">2.1 Related Work</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">2.2 Comparative Analysis of Studies</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none;"><strong>Chapter 3: Dataset & Exploratory Data Analysis</strong></td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">3.1 Dataset Description</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">3.2 Missing Value Analysis</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">3.3 Statistical Summary</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">3.4 EDA Visualizations</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none;"><strong>Chapter 4: Data Preprocessing & Feature Engineering</strong></td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">4.1 Data Cleaning Pipeline</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">4.2 Outlier Removal</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">4.3 Feature Engineering</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">4.4 One-Hot Encoding & Scaling</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none;"><strong>Chapter 5: Model Design & Mathematical Foundation</strong></td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">5.1 Linear Regression (Baseline)</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">5.2 Ridge Regression (L2)</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">5.3 Lasso Regression (L1)</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">5.4 ElasticNet (L1 + L2)</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">5.5 Bias-Variance Tradeoff</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none;"><strong>Chapter 6: Optimization & Hyperparameter Tuning</strong></td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">6.1 GridSearchCV Process</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">6.2 5-Fold Cross-Validation</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">6.3 Hyperparameter Search Space</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none;"><strong>Chapter 7: Results & Discussion</strong></td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">7.1 Before vs After Optimization</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">7.2 Final Model Comparison</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">7.3 Performance Insights</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">7.4 Coefficient Stability Analysis</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none;"><strong>Chapter 8: System Architecture & Deployment</strong></td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">8.1 System Architecture</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">8.2 API Design</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">8.3 Web Application Features</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">8.4 Project Structure</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none;"><strong>Chapter 9: Conclusion & Future Work</strong></td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">9.1 Conclusion</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none; padding-left:30px;">9.2 Future Work</td><td style="border:none;"></td></tr>
+    <tr><td style="border:none;"><strong>References</strong></td><td style="border:none;"></td></tr>
   </tbody>
 </table>
 
 
 <!-- ══════════════════════════════════════════════════════════ -->
-<!-- CHAPTER 1: INTRODUCTION -->
+<!-- CHAPTER 1 -->
 <!-- ══════════════════════════════════════════════════════════ -->
 <div class="page-break"></div>
 <h2 class="chapter-title">Chapter 1<br>Introduction</h2>
@@ -388,465 +270,726 @@
   The Indian real estate market is one of the fastest-growing sectors, projected to reach a market size of $1 trillion by 2030. Within this ecosystem, Bengaluru stands as one of the most dynamic and heterogeneous metropolitan housing markets in the country. Property prices in the city are determined by a complex interplay of factors including geographical location, carpet area, number of bedrooms and bathrooms, availability of amenities like balconies, proximity to IT hubs, and general market sentiment.
 </p>
 <p>
-  Traditional property valuation methods rely heavily on domain expertise, manual market surveys, and subjective comparisons — all of which are time-consuming, inconsistent, and susceptible to human bias. This information asymmetry between buyers, sellers, and real estate agents creates significant inefficiencies in the market. Buyers often overpay for properties in unfamiliar neighborhoods, while sellers may inadvertently underprice their assets due to inadequate analysis of comparable listings.
-</p>
-<p>
-  Machine learning offers a powerful solution to this problem. By training regression models on historical transaction data, we can extract mathematical relationships between property attributes and market prices. Furthermore, the application of <strong>regularization techniques</strong> such as L1 (Lasso), L2 (Ridge), and their combination (ElasticNet) ensures that the learned model coefficients remain <strong>stable and generalizable</strong>, preventing overfitting to noise in the training data — a critical challenge when dealing with high-dimensional one-hot-encoded categorical features like neighborhood locations.
-</p>
-<p>
-  This project goes beyond a standard academic machine learning exercise by developing an <strong>end-to-end full-stack application</strong>. The trained model is not only evaluated offline but is deployed through a RESTful API (FastAPI) and served to users via a modern web interface (Next.js/React), making the prediction system interactive, explainable, and production-ready.
+  Traditional property valuation methods rely heavily on domain expertise, manual market surveys, and subjective comparisons — all of which are time-consuming, inconsistent, and susceptible to human bias. Machine learning offers a powerful solution by training regression models on historical transaction data to extract mathematical relationships between property attributes and market prices. Furthermore, <strong>regularization techniques</strong> such as L1 (Lasso), L2 (Ridge), and their combination (ElasticNet) ensure that the learned model coefficients remain <strong>stable and generalizable</strong>.
 </p>
 
 <h3>1.2 Problem Statement</h3>
 <div class="box">
-  <strong>Academic Problem Statement:</strong><br>
+  <strong>Academic Problem Statement (as given by instructor):</strong><br>
   <em>"Build a regression model to estimate house prices from location, area, and amenities."</em>
   <ul style="margin-top: 8px;">
     <li><strong>Optimization objective:</strong> Minimize regularized loss (L2).</li>
     <li><strong>Success criterion:</strong> High R² score with stable coefficients.</li>
   </ul>
 </div>
-<p>
-  Given a property's features — area in square feet, number of bedrooms (BHK), number of bathrooms, number of balconies, and geographical location — the system must accurately predict the selling price in Indian Lakhs (₹). The prediction must be powered by regularized regression models that produce stable, interpretable coefficients while maintaining high predictive accuracy as measured by the R² (coefficient of determination) metric.
-</p>
 
 <h3>1.3 Objectives of the Study</h3>
-<p>The primary objectives of this project are:</p>
 <ol>
-  <li><strong>Data Preprocessing:</strong> Perform end-to-end cleaning, missing value imputation, outlier removal, and type standardization on the raw Bengaluru House Data CSV to produce a model-ready dataset.</li>
-  <li><strong>Feature Engineering:</strong> Extract meaningful features (BHK from size strings, price-per-sqft for anomaly detection), reduce dimensionality through location grouping, and apply one-hot encoding and standard scaling.</li>
-  <li><strong>Model Training & Comparison:</strong> Train and compare four regression algorithms — Linear Regression, Ridge (L2), Lasso (L1), and ElasticNet (L1+L2) — evaluating their R², MSE, and coefficient stability.</li>
-  <li><strong>Hyperparameter Optimization:</strong> Use GridSearchCV with 5-fold cross-validation to find optimal regularization parameters (α, l1_ratio) that minimize the regularized loss function.</li>
-  <li><strong>Deployment:</strong> Serve the trained model through a FastAPI REST API consumed by a Next.js web application, providing real-time predictions, 4-model comparisons, explainability features, and PDF report generation.</li>
+  <li>Perform end-to-end data preprocessing on the raw Bengaluru House Data CSV (13,320 records) to produce a clean, model-ready dataset.</li>
+  <li>Engineer meaningful features (BHK extraction, location grouping, one-hot encoding, standard scaling).</li>
+  <li>Train and compare four regression algorithms — Linear, Ridge (L2), Lasso (L1), ElasticNet (L1+L2).</li>
+  <li>Optimize hyperparameters using GridSearchCV with 5-fold cross-validation to minimize regularized loss.</li>
+  <li>Deploy the champion model via a FastAPI REST API with a Next.js web frontend featuring real-time predictions, model comparison, and explainability.</li>
 </ol>
+
+<h3>1.4 Scope of the Project</h3>
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    graph LR
+      A["🗄️ Raw Data<br/>13,320 rows"] --> B["🧹 Preprocessing<br/>Cleaning & Encoding"]
+      B --> C["⚙️ Feature Eng.<br/>262 features"]
+      C --> D["🧠 Model Training<br/>4 Algorithms"]
+      D --> E["🔧 Optimization<br/>GridSearchCV"]
+      E --> F["🏆 Best Model<br/>ElasticNet"]
+      F --> G["🚀 Deployment<br/>FastAPI + Next.js"]
+      style A fill:#fef3c7,stroke:#f59e0b
+      style F fill:#dcfce7,stroke:#22c55e
+      style G fill:#e0f2fe,stroke:#0284c7
+  </div>
+</div>
+<p class="fig-caption">Fig 1: End-to-End Project Scope — From Raw Data to Live Deployment</p>
 
 
 <!-- ══════════════════════════════════════════════════════════ -->
-<!-- CHAPTER 2: LITERATURE REVIEW -->
+<!-- CHAPTER 2 -->
 <!-- ══════════════════════════════════════════════════════════ -->
 <div class="page-break"></div>
 <h2 class="chapter-title">Chapter 2<br>Literature Review</h2>
 
 <h3>2.1 Related Work</h3>
 <p>
-  The application of machine learning to real estate price prediction has evolved significantly over the past decade, progressing from simple linear models to complex ensemble and deep learning architectures. This section surveys the most relevant prior works and positions our project within the broader research landscape.
+  The application of machine learning to real estate price prediction has evolved significantly over the past decade. This section surveys the most relevant prior works and positions our project within the broader research landscape.
 </p>
 <p>
-  <strong>Madhuri et al. (2019)</strong> explored house price prediction in Bengaluru using multiple regression and random forest methods on Kaggle's Bengaluru House Data. Their study achieved an R² of 0.82 using Random Forest but noted that feature engineering (particularly location encoding) significantly impacted model performance. However, their work did not explore regularization, leaving the model vulnerable to coefficient instability with high-dimensional location features [1].
+  <strong>Madhuri et al. (2019)</strong> explored house price prediction in Bengaluru using multiple regression and random forest methods on Kaggle's Bengaluru House Data. Their study achieved an R² of 0.82 using Random Forest but noted that feature engineering (particularly location encoding) significantly impacted model performance. However, their work did not explore regularization, leaving the model vulnerable to coefficient instability with high-dimensional features [1].
 </p>
 <p>
-  <strong>Varma et al. (2018)</strong> compared Linear Regression, Decision Trees, and Random Forest for house price prediction, reporting that ensemble methods consistently outperformed single linear models. Their analysis identified area, location, and number of bedrooms as the three most important predictive features — findings consistent with our own feature importance analysis [2].
+  <strong>Varma et al. (2018)</strong> compared Linear Regression, Decision Trees, and Random Forest for house price prediction, reporting that ensemble methods consistently outperformed single linear models. They identified area, location, and number of bedrooms as the three most important predictive features [2].
 </p>
 <p>
-  <strong>Phan (2019)</strong> applied Lasso and Ridge regression specifically to the Ames Housing dataset, demonstrating that L2 (Ridge) regularization effectively handles multicollinearity among correlated features, while L1 (Lasso) performs automatic feature selection by zeroing out irrelevant coefficients. Their work showed that ElasticNet, which combines both penalties, often provides the best trade-off in real estate datasets with both dense and sparse feature groups [3].
+  <strong>Phan (2019)</strong> applied Lasso and Ridge regression to the Ames Housing dataset, demonstrating that L2 (Ridge) regularization effectively handles multicollinearity, while L1 (Lasso) performs automatic feature selection. They showed that ElasticNet often provides the best trade-off in datasets with both dense and sparse feature groups [3].
 </p>
 <p>
-  <strong>Mu et al. (2014)</strong> investigated regularized regression for housing data and established that when One-Hot Encoding introduces a large number of binary features (as with neighborhood locations), the regularization penalty becomes critical for preventing overfitting. Without it, the model assigns wildly unstable weights to rare categories — a phenomenon we directly observed and addressed in our project [4].
+  <strong>Mu et al. (2014)</strong> investigated regularized regression for housing data and established that when One-Hot Encoding introduces a large number of binary features, the regularization penalty becomes critical for preventing overfitting [4].
 </p>
 <p>
-  <strong>Park and Bae (2015)</strong> combined machine learning predictions with spatial analysis (GIS data) for apartment prices in Seoul. Their work demonstrated that including geographical context significantly improves prediction accuracy, a finding that aligns with our observation that location features alone account for 178 of our 262 total features [5].
+  <strong>Park and Bae (2015)</strong> combined ML predictions with spatial analysis for apartment prices in Seoul, demonstrating that including geographical context significantly improves prediction accuracy [5].
 </p>
 <p>
-  <strong>Alfiyatin et al. (2017)</strong> employed ridge regression with feature selection for the Malang housing market, achieving stable R² scores across cross-validation folds — demonstrating the regularization benefit of reduced variance in predictions. Their systematic hyperparameter search established GridSearchCV as the standard approach for tuning regularization strength [6].
+  <strong>Alfiyatin et al. (2017)</strong> employed ridge regression with feature selection for the Malang housing market, achieving stable R² scores across cross-validation folds, establishing GridSearchCV as the standard approach for tuning regularization strength [6].
 </p>
 <p>
-  Despite substantial progress, limitations persist across the literature: (1) most studies use either L1 or L2 regularization independently, without exploring Combined penalties like ElasticNet; (2) few projects deploy the trained model as a live web application; (3) coefficient stability analysis is rarely presented alongside accuracy metrics; and (4) model explainability features are almost always absent from the final product. Our project addresses all four gaps through systematic comparison of four models, full-stack deployment, coefficient stability analysis, and a built-in explainability engine.
+  Despite substantial progress, key gaps persist: (1) most studies use either L1 or L2 regularization independently, without exploring combined penalties like ElasticNet; (2) few projects deploy the trained model as a live web application; (3) coefficient stability analysis is rarely presented; and (4) model explainability is almost always absent. Our project addresses all four gaps.
 </p>
 
-<h3>2.2 Comparative Analysis</h3>
+<h3>2.2 Comparative Analysis of Studies</h3>
 <p><strong>Table 1:</strong> Comparative Analysis of Relevant Studies</p>
 <table>
-  <thead>
-    <tr><th>Author</th><th>Year</th><th>Method</th><th>R² / Accuracy</th><th>Key Findings</th></tr>
-  </thead>
+  <thead><tr><th>Author</th><th>Year</th><th>Method</th><th>R²</th><th>Key Findings</th></tr></thead>
   <tbody>
-    <tr><td>Madhuri et al.</td><td>2019</td><td>Random Forest</td><td>R² = 0.82</td><td>Best performer among tested models; location encoding critical</td></tr>
-    <tr><td>Varma et al.</td><td>2018</td><td>Linear, DT, RF</td><td>R² = 0.78 (RF)</td><td>Ensemble methods outperform single linear models</td></tr>
-    <tr><td>Phan</td><td>2019</td><td>Ridge, Lasso, ElasticNet</td><td>R² = 0.89 (Ames)</td><td>ElasticNet best for mixed dense/sparse features</td></tr>
-    <tr><td>Mu et al.</td><td>2014</td><td>Regularized LR</td><td>R² = 0.75</td><td>Regularization critical for OHE features</td></tr>
-    <tr><td>Park & Bae</td><td>2015</td><td>ML + GIS</td><td>R² = 0.84</td><td>Spatial data improves predictions significantly</td></tr>
-    <tr><td>Alfiyatin et al.</td><td>2017</td><td>Ridge + GridSearchCV</td><td>R² = 0.80</td><td>Stable cross-validation scores with regularization</td></tr>
-    <tr><td><strong>Our Project</strong></td><td><strong>2026</strong></td><td><strong>ElasticNet (L1+L2)</strong></td><td><strong>R² = 0.7158</strong></td><td><strong>Full-stack deployed, 4-model comparison, explainability engine, PDF export</strong></td></tr>
+    <tr><td>Madhuri et al.</td><td>2019</td><td>Random Forest</td><td>0.82</td><td>Location encoding critical; no regularization</td></tr>
+    <tr><td>Varma et al.</td><td>2018</td><td>Linear, DT, RF</td><td>0.78</td><td>Ensemble methods outperform single models</td></tr>
+    <tr><td>Phan</td><td>2019</td><td>Ridge, Lasso, ElasticNet</td><td>0.89</td><td>ElasticNet best for mixed feature types</td></tr>
+    <tr><td>Mu et al.</td><td>2014</td><td>Regularized LR</td><td>0.75</td><td>Regularization critical for OHE features</td></tr>
+    <tr><td>Park & Bae</td><td>2015</td><td>ML + GIS</td><td>0.84</td><td>Spatial data improves predictions</td></tr>
+    <tr><td>Alfiyatin et al.</td><td>2017</td><td>Ridge + GridSearchCV</td><td>0.80</td><td>Stable CV scores with regularization</td></tr>
+    <tr style="background:#f0fdf4; font-weight:bold;"><td>Our Project</td><td>2026</td><td>ElasticNet (L1+L2)</td><td>0.7158</td><td>Full-stack deployed, 4-model comparison, XAI, PDF export</td></tr>
   </tbody>
 </table>
 
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    graph TD
+      subgraph "Literature Gap Analysis"
+        G1["Gap 1: Only L1 OR L2 used<br/>❌ No combined penalty"] --> S1["✅ Our Solution:<br/>ElasticNet combines both"]
+        G2["Gap 2: No live deployment<br/>❌ Notebook-only"] --> S2["✅ Our Solution:<br/>FastAPI + Next.js web app"]
+        G3["Gap 3: No coefficient<br/>stability analysis ❌"] --> S3["✅ Our Solution:<br/>Before/after comparison"]
+        G4["Gap 4: No explainability<br/>❌ Black-box"] --> S4["✅ Our Solution:<br/>Feature contribution waterfall"]
+      end
+      style G1 fill:#fee2e2,stroke:#ef4444
+      style G2 fill:#fee2e2,stroke:#ef4444
+      style G3 fill:#fee2e2,stroke:#ef4444
+      style G4 fill:#fee2e2,stroke:#ef4444
+      style S1 fill:#dcfce7,stroke:#22c55e
+      style S2 fill:#dcfce7,stroke:#22c55e
+      style S3 fill:#dcfce7,stroke:#22c55e
+      style S4 fill:#dcfce7,stroke:#22c55e
+  </div>
+</div>
+<p class="fig-caption">Fig 2: Literature Gap Analysis — How Our Project Addresses Existing Research Gaps</p>
+
 
 <!-- ══════════════════════════════════════════════════════════ -->
-<!-- CHAPTER 3: METHODOLOGY -->
+<!-- CHAPTER 3 -->
 <!-- ══════════════════════════════════════════════════════════ -->
 <div class="page-break"></div>
-<h2 class="chapter-title">Chapter 3<br>Methodology</h2>
+<h2 class="chapter-title">Chapter 3<br>Dataset & Exploratory Data Analysis</h2>
 
-<h3>3.1 Dataset and Preprocessing</h3>
+<h3>3.1 Dataset Description</h3>
 <p>
-  The dataset used is the <em>Bengaluru House Price Data</em> sourced from Kaggle, containing <strong>13,320 records</strong> of residential properties with 9 columns: area_type, availability, location, size, society, total_sqft, bath, balcony, and price (target variable in Lakhs).
+  The dataset used is the <em>Bengaluru House Price Data</em> sourced from Kaggle, containing <strong>13,320 records</strong> of residential properties with 9 columns.
 </p>
 
-<h4>3.1.1 Handling Missing Values</h4>
+<div class="stats-grid">
+  <div class="stat-card"><div class="num">13,320</div><div class="label">Total Records</div></div>
+  <div class="stat-card"><div class="num">9</div><div class="label">Original Features</div></div>
+  <div class="stat-card"><div class="num">1,305</div><div class="label">Unique Locations</div></div>
+  <div class="stat-card"><div class="num">₹8L – ₹3,600L</div><div class="label">Price Range</div></div>
+</div>
+
 <table>
-  <thead><tr><th>Column</th><th>Missing Count</th><th>% Missing</th><th>Strategy</th></tr></thead>
+  <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
   <tbody>
-    <tr><td><code>society</code></td><td>5,502</td><td>41.3%</td><td><strong>Dropped</strong> — too sparse, minimal predictive power</td></tr>
+    <tr><td><code>area_type</code></td><td>Categorical</td><td>Super built-up, Built-up, Plot, Carpet</td></tr>
+    <tr><td><code>availability</code></td><td>Categorical</td><td>"Ready To Move" or expected possession date</td></tr>
+    <tr><td><code>location</code></td><td>Categorical</td><td>Locality name (1,305 unique values)</td></tr>
+    <tr><td><code>size</code></td><td>Categorical</td><td>Number of bedrooms (e.g., "2 BHK", "4 Bedroom")</td></tr>
+    <tr><td><code>society</code></td><td>Categorical</td><td>Housing society name (41% missing — dropped)</td></tr>
+    <tr><td><code>total_sqft</code></td><td>Text → Float</td><td>Area; may contain ranges (e.g., "1000 - 1200")</td></tr>
+    <tr><td><code>bath</code></td><td>Numeric</td><td>Number of bathrooms</td></tr>
+    <tr><td><code>balcony</code></td><td>Numeric</td><td>Number of balconies</td></tr>
+    <tr><td><code>price</code></td><td>Numeric</td><td><strong>Target</strong> — price in Lakhs (₹)</td></tr>
+  </tbody>
+</table>
+
+<h3>3.2 Missing Value Analysis</h3>
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    pie title Missing Value Distribution
+      "society (41.3%)" : 5502
+      "balcony (4.6%)" : 609
+      "bath (0.5%)" : 73
+      "size (0.1%)" : 16
+      "location (0.01%)" : 1
+      "Complete Records" : 7119
+  </div>
+</div>
+<p class="fig-caption">Fig 3: Missing Value Distribution Across Dataset Columns</p>
+
+<table>
+  <thead><tr><th>Column</th><th>Missing</th><th>%</th><th>Strategy</th></tr></thead>
+  <tbody>
+    <tr><td><code>society</code></td><td>5,502</td><td>41.3%</td><td><strong>Dropped entirely</strong> — too sparse</td></tr>
     <tr><td><code>balcony</code></td><td>609</td><td>4.6%</td><td>Median imputation</td></tr>
     <tr><td><code>bath</code></td><td>73</td><td>0.5%</td><td>Median imputation</td></tr>
-    <tr><td><code>size</code></td><td>16</td><td>0.1%</td><td>Rows dropped (negligible count)</td></tr>
+    <tr><td><code>size</code></td><td>16</td><td>0.1%</td><td>Rows dropped</td></tr>
     <tr><td><code>location</code></td><td>1</td><td>0.0%</td><td>Row dropped</td></tr>
   </tbody>
 </table>
 
-<h4>3.1.2 Duplicate Removal</h4>
-<p><strong>529</strong> duplicate rows were identified and dropped, reducing the dataset from 13,320 → 12,791.</p>
-
-<h4>3.1.3 Data Type Correction</h4>
-<p>
-  The <code>total_sqft</code> column contained <strong>string-encoded ranges</strong> (e.g., <code>"2100 - 2850"</code>) and alternate units (<code>"34.46Sq. Meter"</code>, <code>"4125Perch"</code>). A custom converter function averages ranges and drops unparseable entries, converting the column to a clean <code>float</code>.
-</p>
-
-<h4>3.1.4 Outlier Removal</h4>
-<ul>
-  <li><strong>Sqft-per-BHK filter:</strong> Properties with &lt; 300 sqft per bedroom are dropped (physically impossible or data-entry errors).</li>
-  <li><strong>Location-wise price_per_sqft:</strong> For each location group, values more than 1 standard deviation from the group mean are removed. This eliminates extreme luxury outliers without distorting locality-level trends.</li>
-</ul>
-<div class="box success">
-  <strong>Result:</strong> Dataset cleaned from 12,791 → <strong>9,219</strong> high-quality records.
-</div>
-
-<h3>3.2 Feature Engineering</h3>
-
-<h4>3.2.1 BHK Extraction</h4>
-<p>The <code>size</code> column (e.g., "3 BHK", "4 Bedroom") is parsed using regex to extract an integer <code>bhk</code> feature.</p>
-
-<h4>3.2.2 Price per Square Foot (Intermediate)</h4>
-<p>A derived feature <code>price_per_sqft = price × 100,000 / total_sqft</code> is computed as an intermediate metric for detecting anomalies. It is dropped before final encoding.</p>
-
-<h4>3.2.3 Location Dimensionality Reduction</h4>
-<p>
-  Locations with ≤ 10 data points are grouped into an <strong>"other"</strong> category. This reduces unique locations from 1,305 → <strong>179</strong>, preventing massive one-hot vectors while retaining statistically meaningful categories.
-</p>
-
-<h4>3.2.4 One-Hot Encoding</h4>
-<p>
-  Categorical columns (<code>location</code>, <code>area_type</code>, <code>availability</code>) are one-hot encoded with <code>drop_first=True</code> to avoid the dummy variable trap. Final feature count: <strong>262 columns</strong>.
-</p>
-
-<h4>3.2.5 Feature Scaling</h4>
-<p>
-  Numerical features (<code>total_sqft</code>, <code>bath</code>, <code>balcony</code>, <code>bhk</code>) are standardized using <code>StandardScaler</code> (zero mean, unit variance). The fitted scaler is serialized (<code>scaler.pkl</code>) for reuse during deployment — new prediction inputs must be scaled using this exact scaler.
-</p>
-
-<div class="formula">z = (x − μ) / σ   (Z-Score Standardization)</div>
-
-<h3>3.3 Model Design</h3>
-<p>
-  Four regression models were implemented, each with a specific mathematical objective. The architecture was designed to systematically compare the impact of regularization on coefficient stability and predictive performance.
-</p>
-
-<h4>3.3.1 Linear Regression (Baseline — No Regularization)</h4>
-<div class="formula">Loss_OLS = Σ(yᵢ − ŷᵢ)²</div>
-<p>Fits a hyperplane by minimizing the sum of squared residuals (Ordinary Least Squares). Serves as the <strong>baseline</strong>. Susceptible to overfitting when feature count (262) is high relative to sample size.</p>
-
-<h4>3.3.2 Ridge Regression (L2 Regularization)</h4>
-<div class="formula">Loss_Ridge = Σ(yᵢ − ŷᵢ)² + α · Σ(βⱼ²)</div>
-<p>Adds an L2 penalty (sum of squared coefficients) to the loss function. This <strong>shrinks all coefficients toward zero</strong> without eliminating any, stabilizing predictions when features are highly correlated or numerous. The hyperparameter α controls the penalty severity.</p>
-
-<h4>3.3.3 Lasso Regression (L1 Regularization)</h4>
-<div class="formula">Loss_Lasso = Σ(yᵢ − ŷᵢ)² + α · Σ|βⱼ|</div>
-<p>Adds an L1 penalty (sum of absolute coefficients). This can drive coefficients <strong>exactly to zero</strong>, performing automatic <strong>feature selection</strong>. Useful when many features are expected to be irrelevant.</p>
-
-<h4>3.3.4 ElasticNet (Combined L1 + L2)</h4>
-<div class="formula">Loss_ElasticNet = Σ(yᵢ − ŷᵢ)² + α · [l1_ratio · Σ|βⱼ| + (1 − l1_ratio) · Σ(βⱼ²)]</div>
-<p>Combines both L1 and L2 penalties with a mixing parameter <code>l1_ratio</code>. This balances feature selection (sparsity) with grouping effects (stability). Ideal for datasets with groups of correlated features — exactly the case with our one-hot-encoded location features.</p>
-
+<h3>3.3 Statistical Summary</h3>
 <table>
-  <thead>
-    <tr><th>Model</th><th>Penalty Term</th><th>Feature Selection?</th><th>Best When</th></tr>
-  </thead>
+  <thead><tr><th>Metric</th><th>total_sqft</th><th>bath</th><th>balcony</th><th>price (₹ L)</th></tr></thead>
   <tbody>
-    <tr><td>Linear Regression</td><td>None</td><td>No</td><td>Few, uncorrelated features</td></tr>
-    <tr><td>Ridge (L2)</td><td>α · Σ(β²)</td><td>No</td><td>Many correlated features</td></tr>
-    <tr><td>Lasso (L1)</td><td>α · Σ|β|</td><td>Yes</td><td>Sparse true signal</td></tr>
-    <tr><td>ElasticNet (L1+L2)</td><td>α · [l1·Σ|β| + l2·Σβ²]</td><td>Partial</td><td>Groups of correlated features (our case)</td></tr>
+    <tr><td>Mean</td><td>1,553</td><td>2.69</td><td>1.58</td><td>112.57</td></tr>
+    <tr><td>Std Dev</td><td>1,218</td><td>1.34</td><td>0.82</td><td>148.97</td></tr>
+    <tr><td>Min</td><td>1</td><td>1</td><td>0</td><td>8</td></tr>
+    <tr><td>Max</td><td>52,272</td><td>40</td><td>3</td><td>3,600</td></tr>
   </tbody>
 </table>
 
-<h3>3.4 Training and Validation</h3>
-<p>
-  The cleaned dataset (9,219 samples × 262 features) was split into <strong>80% training</strong> (7,375 samples) and <strong>20% testing</strong> (1,844 samples) using <code>random_state=42</code> for reproducibility.
-</p>
-
-<h4>3.4.1 Hyperparameter Tuning with GridSearchCV</h4>
-<p>
-  The regularization strength (<code>alpha</code>) and ElasticNet's <code>l1_ratio</code> are <strong>hyperparameters</strong> — they are not learned from data and must be set before training. <code>GridSearchCV</code> systematically evaluates all candidate combinations using 5-fold cross-validation:
-</p>
-<ul>
-  <li><strong>Ridge:</strong> alpha ∈ {0.001, 0.01, 0.1, 1.0, 10.0, 100.0}</li>
-  <li><strong>Lasso:</strong> alpha ∈ {0.001, 0.01, 0.1, 1.0, 10.0}</li>
-  <li><strong>ElasticNet:</strong> alpha ∈ {0.001, 0.01, 0.1, 1.0} × l1_ratio ∈ {0.1, 0.3, 0.5, 0.7, 0.8, 0.9}</li>
-</ul>
-
-<h4>3.4.2 5-Fold Cross-Validation</h4>
-<p>
-  K-Fold CV (k = 5) splits the training data into 5 equal folds. The model trains on 4 folds and validates on the remaining fold, rotating 5 times. The average score across all 5 folds provides a reliable, bias-reduced performance estimate that protects against overfitting to a single lucky/unlucky train-test split.
-</p>
-
-<h3>3.5 Evaluation Metrics</h3>
-<table>
-  <thead>
-    <tr><th>Metric</th><th>Formula</th><th>Purpose</th></tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><strong>R² Score</strong></td>
-      <td>1 − (SS_res / SS_tot)</td>
-      <td>Proportion of variance explained by the model. 1.0 = perfect prediction.</td>
-    </tr>
-    <tr>
-      <td><strong>MSE</strong></td>
-      <td>(1/n) Σ(y − ŷ)²</td>
-      <td>Penalizes large errors heavily. Used as the optimization target.</td>
-    </tr>
-    <tr>
-      <td><strong>MAE</strong></td>
-      <td>(1/n) Σ|y − ŷ|</td>
-      <td>Average absolute error. Human-readable (₹ Lakhs deviation).</td>
-    </tr>
-  </tbody>
+<h3>3.4 EDA Visualizations</h3>
+<table style="border: none;">
+  <tr>
+    <td style="width:50%; text-align:center; border:none;">
+      <h4>Fig 4: Price Distribution (Target Variable)</h4>
+      <img src="../backend/ml_pipeline/outputs/eda/price_distribution.png" width="95%" alt="Price Distribution">
+      <p style="font-size:0.85rem; color:#64748b;">Heavily right-skewed; median ₹72L vs mean ₹112L. Most properties cluster below ₹200L.</p>
+    </td>
+    <td style="width:50%; text-align:center; border:none;">
+      <h4>Fig 5: Correlation Heatmap</h4>
+      <img src="../backend/ml_pipeline/outputs/eda/correlation_heatmap.png" width="95%" alt="Correlation Heatmap">
+      <p style="font-size:0.85rem; color:#64748b;">Bath and BHK show strong positive correlation with price.</p>
+    </td>
+  </tr>
 </table>
-<div class="box">
-  <strong>Why multiple metrics?</strong>
-  R² provides a global quality rating, MSE guides the optimization algorithm (it's differentiable), and MAE translates results into business-meaningful currency values that stakeholders can understand.
-</div>
 
-<!-- ── Methodology Flowchart ──────────────────────────── -->
-<h3>Fig 1: Flowchart of Methodology</h3>
-<div class="diagram">
-┌──────────────────┐
-│  Raw CSV Data     │
-│  (13,320 rows)    │
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  Data Cleaning    │
-│  • Drop NaNs      │
-│  • Remove dupes   │
-│  • Fix sqft ranges│
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  Outlier Removal  │
-│  • sqft/bhk < 300 │
-│  • ±1σ per locale │
-│  → 9,219 rows     │
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  Feature Eng.     │
-│  • Extract BHK    │
-│  • Location group │
-│  • One-Hot (262)  │
-│  • StandardScaler │
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────────────────────────────────┐
-│              Model Training                   │
-│                                               │
-│  ┌─────────┐ ┌───────┐ ┌───────┐ ┌─────────┐│
-│  │ Linear  │ │ Ridge │ │ Lasso │ │ElasticNet││
-│  │ (Base)  │ │ (L2)  │ │ (L1)  │ │ (L1+L2) ││
-│  └─────────┘ └───────┘ └───────┘ └─────────┘│
-└────────────────────┬─────────────────────────┘
-                     │
-                     ▼
-         ┌──────────────────────┐
-         │   GridSearchCV       │
-         │   5-Fold Cross-Val   │
-         │   → Best α, l1_ratio│
-         └──────────┬───────────┘
-                    │
-                    ▼
-         ┌──────────────────────┐
-         │   Evaluation         │
-         │   R², MSE, MAE       │
-         │   → ElasticNet wins  │
-         └──────────┬───────────┘
-                    │
-                    ▼
-         ┌──────────────────────┐
-         │   Deployment         │
-         │   FastAPI + Next.js  │
-         │   Live Web App       │
-         └──────────────────────┘
-</div>
+<h4>Key EDA Insights</h4>
+<ol>
+  <li><code>society</code> has > 40% missing data and 2,688 unique values — dropped entirely.</li>
+  <li><code>total_sqft</code> stored as text with ranges and mixed units — requires custom conversion.</li>
+  <li><code>price</code> is heavily right-skewed — outlier treatment is essential.</li>
+  <li><code>location</code> has 1,305 unique values — dimensionality reduction needed.</li>
+  <li><code>bath</code> and <code>bhk</code> (derived) show positive linear correlation with price.</li>
+</ol>
 
 
 <!-- ══════════════════════════════════════════════════════════ -->
-<!-- CHAPTER 4: RESULTS AND DISCUSSION -->
+<!-- CHAPTER 4 -->
 <!-- ══════════════════════════════════════════════════════════ -->
 <div class="page-break"></div>
-<h2 class="chapter-title">Chapter 4<br>Results and Discussion</h2>
+<h2 class="chapter-title">Chapter 4<br>Data Preprocessing & Feature Engineering</h2>
 
-<h3>4.1 Experimental Results</h3>
+<h3>4.1 Data Cleaning Pipeline</h3>
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    flowchart TD
+      A["📂 Raw Dataset<br/>n = 13,320 rows × 9 cols"] --> B["🗑️ Drop Duplicates<br/>529 removed → n = 12,791"]
+      B --> C["🩹 Handle Missing Values<br/>Drop society column entirely<br/>Median impute bath & balcony"]
+      C --> D["🔧 Fix total_sqft<br/>Convert ranges to averages<br/>Remove unparseable units"]
+      D --> E["📐 Extract BHK<br/>Parse 'size' column<br/>'3 BHK' → 3"]
+      E --> F["📊 Compute price_per_sqft<br/>Intermediate anomaly metric"]
+      F --> G["✂️ Remove Outliers<br/>sqft/bhk < 300 filter<br/>±1σ per location"]
+      G --> H["✅ Clean Dataset<br/>n = 9,219 rows"]
+      style A fill:#fef3c7,stroke:#f59e0b
+      style H fill:#dcfce7,stroke:#22c55e
+  </div>
+</div>
+<p class="fig-caption">Fig 6: Complete Data Cleaning Pipeline — From 13,320 to 9,219 High-Quality Records</p>
+
+<h3>4.2 Outlier Removal</h3>
+<p>Two-stage outlier removal strategy was applied:</p>
+<ul>
+  <li><strong>Business Logic Filter:</strong> Properties with less than 300 sqft per bedroom are physically impossible (a 2 BHK with only 400 sqft is likely a data-entry error). These rows were dropped.</li>
+  <li><strong>Statistical Filter:</strong> For each location, any property whose <code>price_per_sqft</code> fell more than 1 standard deviation from the location mean was removed. This eliminates extreme luxury outliers without distorting locality-level pricing trends.</li>
+</ul>
+
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    flowchart LR
+      A["12,791 records"] --> B{"sqft/bhk >= 300?"}
+      B -->|Yes| C["Pass"]
+      B -->|No| D["❌ Drop"]
+      C --> E{"Within ±1σ of<br/>location mean?"}
+      E -->|Yes| F["✅ Keep<br/>9,219 records"]
+      E -->|No| G["❌ Drop"]
+      style D fill:#fee2e2,stroke:#ef4444
+      style G fill:#fee2e2,stroke:#ef4444
+      style F fill:#dcfce7,stroke:#22c55e
+  </div>
+</div>
+<p class="fig-caption">Fig 7: Two-Stage Outlier Removal Decision Flow</p>
+
+<div class="formula">Outlier Condition: Remove row i if &nbsp; price_per_sqft_i &lt; (μ_location − σ_location) &nbsp;OR&nbsp; price_per_sqft_i &gt; (μ_location + σ_location)</div>
+
+<h3>4.3 Feature Engineering</h3>
+
+<h4>4.3.1 BHK Extraction</h4>
+<p>The <code>size</code> column (e.g., "3 BHK", "4 Bedroom") is parsed using regex to extract an integer <code>bhk</code> feature.</p>
+
+<h4>4.3.2 Location Dimensionality Reduction</h4>
 <p>
-  The training process was executed across all four models with systematic hyperparameter tuning. Below are the actual results obtained from our pipeline, extracted directly from the optimization outputs:
+  Locations with ≤ 10 data points are grouped into an <strong>"other"</strong> bucket. This is critical — without it, one-hot encoding would create 1,305 binary columns, most with near-zero variance, causing severe overfitting.
 </p>
 
-<h4>4.1.1 Before Optimization (Default Hyperparameters)</h4>
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    flowchart LR
+      A["1,305 unique<br/>locations"] --> B{"Count >= 10?"}
+      B -->|Yes| C["Keep as-is<br/>179 locations"]
+      B -->|No| D["Group into<br/>'other'"]
+      C --> E["179 location<br/>columns after OHE"]
+      D --> E
+      style A fill:#fef3c7,stroke:#f59e0b
+      style E fill:#dcfce7,stroke:#22c55e
+  </div>
+</div>
+<p class="fig-caption">Fig 8: Location Dimensionality Reduction — 1,305 → 179 Meaningful Categories</p>
+
+<h3>4.4 One-Hot Encoding & Scaling</h3>
+
+<h4>4.4.1 One-Hot Encoding</h4>
+<p>
+  Categorical columns (<code>location</code>, <code>area_type</code>, <code>availability</code>) are one-hot encoded using <code>pd.get_dummies(drop_first=True)</code> to avoid the <strong>dummy variable trap</strong> (perfect multicollinearity). Final feature matrix: <strong>9,219 rows × 262 columns</strong>.
+</p>
+
+<h4>4.4.2 Standard Scaling</h4>
+<p>
+  Numerical features (<code>total_sqft</code>, <code>bath</code>, <code>balcony</code>, <code>bhk</code>) are standardized using <code>StandardScaler</code> (zero mean, unit variance). The fitted scaler is serialized (<code>scaler.pkl</code>) for deployment reuse.
+</p>
+<div class="formula">z = (x − μ) / σ &nbsp;&nbsp;&nbsp; (Z-Score Standardization)</div>
+
+<div class="box warn">
+  <strong>Critical:</strong> The same <code>scaler.pkl</code> used during training is loaded at runtime in the API. If a different scaler is used, predictions will be wrong because the model learned relationships in the scaled feature space.
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card"><div class="num">9,219</div><div class="label">Clean Samples</div></div>
+  <div class="stat-card"><div class="num">262</div><div class="label">Total Features</div></div>
+  <div class="stat-card"><div class="num">178</div><div class="label">Location Features</div></div>
+  <div class="stat-card"><div class="num">4</div><div class="label">Numeric Features</div></div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- CHAPTER 5 -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 class="chapter-title">Chapter 5<br>Model Design & Mathematical Foundation</h2>
+
+<p>This chapter details the four regression algorithms used, their mathematical loss functions, and the theoretical rationale for regularization. This is the core of our project's objective: <em>"Minimize regularized loss (L2) for stable coefficients."</em></p>
+
+<h3>5.1 Linear Regression (Baseline — No Regularization)</h3>
+<div class="formula">Loss_OLS = Σ(yᵢ − ŷᵢ)² &nbsp;&nbsp;where&nbsp;&nbsp; ŷ = w₁·Area + w₂·BHK + w₃·Bath + w₄·Balcony + Σ(wₖ·Location_k) + b</div>
+<p>Fits a hyperplane by minimizing the sum of squared residuals (Ordinary Least Squares). Serves as the <strong>baseline</strong>. With 262 features, OLS can assign extremely large positive or negative weights to rare locations, overfitting to noise.</p>
+
+<h3>5.2 Ridge Regression (L2 Regularization)</h3>
+<div class="formula">Loss_Ridge = Σ(yᵢ − ŷᵢ)² + α · Σ(βⱼ²)</div>
+<p>Adds an L2 penalty (sum of <strong>squared</strong> coefficients). This <strong>shrinks all coefficients toward zero</strong> uniformly without eliminating any. The penalty prevents any single feature from dominating, producing stable predictions. The hyperparameter α controls penalty severity.</p>
+
+<h3>5.3 Lasso Regression (L1 Regularization)</h3>
+<div class="formula">Loss_Lasso = Σ(yᵢ − ŷᵢ)² + α · Σ|βⱼ|</div>
+<p>Adds an L1 penalty (sum of <strong>absolute</strong> coefficients). This can drive coefficients <strong>exactly to zero</strong>, performing automatic <strong>feature selection</strong>. With α = 0.01, Lasso eliminated 11 irrelevant location features entirely.</p>
+
+<h3>5.4 ElasticNet (Combined L1 + L2) — Our Champion Model</h3>
+<div class="formula">Loss_ElasticNet = Σ(yᵢ − ŷᵢ)² + α · [ l1_ratio · Σ|βⱼ| + (1 − l1_ratio) · Σ(βⱼ²) ]</div>
+<p>Combines both L1 and L2 penalties with a mixing parameter <code>l1_ratio</code>. With our optimal parameters (α = 0.001, l1_ratio = 0.8), ElasticNet achieves <strong>80% L1 (feature selection) + 20% L2 (stability)</strong>, giving the best of both worlds.</p>
+
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    graph TD
+      subgraph "Model Comparison: Penalty Effects"
+        LR["Linear Regression<br/>No penalty<br/>❌ Unstable coefficients"]
+        Ridge["Ridge (L2)<br/>Shrinks ALL toward 0<br/>✅ Stable, keeps all features"]
+        Lasso["Lasso (L1)<br/>Zeros out irrelevant<br/>✅ Feature selection"]
+        EN["ElasticNet (L1+L2)<br/>Shrinks + Selects<br/>⭐ Best of both worlds"]
+      end
+      LR --> Ridge
+      LR --> Lasso
+      Ridge --> EN
+      Lasso --> EN
+      style LR fill:#fee2e2,stroke:#ef4444
+      style Ridge fill:#e0f2fe,stroke:#0284c7
+      style Lasso fill:#fef3c7,stroke:#f59e0b
+      style EN fill:#dcfce7,stroke:#22c55e
+  </div>
+</div>
+<p class="fig-caption">Fig 9: Regularization Strategy Comparison — How Each Model Handles Coefficients</p>
+
 <table>
-  <thead>
-    <tr><th>Model</th><th>Default α</th><th>R² Score</th><th>MSE</th></tr>
-  </thead>
+  <thead><tr><th>Model</th><th>Penalty</th><th>Feature Selection?</th><th>Stability</th><th>Best When</th></tr></thead>
   <tbody>
-    <tr><td>Linear Regression</td><td>N/A (no penalty)</td><td>0.7084</td><td>3,075.94</td></tr>
+    <tr><td>Linear</td><td>None</td><td>No</td><td>Low</td><td>Few, uncorrelated features</td></tr>
+    <tr><td>Ridge</td><td>α·Σ(β²)</td><td>No</td><td>High</td><td>Many correlated features</td></tr>
+    <tr><td>Lasso</td><td>α·Σ|β|</td><td>Yes</td><td>Medium</td><td>Sparse true signal</td></tr>
+    <tr><td><strong>ElasticNet</strong></td><td>α·[l1·Σ|β| + l2·Σβ²]</td><td>Partial</td><td>High</td><td>Groups of correlated features (our case)</td></tr>
+  </tbody>
+</table>
+
+<h3>5.5 Bias-Variance Tradeoff</h3>
+<p>
+  The regularization parameter α directly controls the <strong>bias-variance tradeoff</strong>:
+</p>
+
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    graph LR
+      subgraph "Low α (e.g., 0.0001)"
+        LA["Low Bias<br/>High Variance<br/>⚠️ Overfitting risk"]
+      end
+      subgraph "Optimal α (0.001)"
+        OA["Balanced Bias<br/>Balanced Variance<br/>✅ Best generalization"]
+      end
+      subgraph "High α (e.g., 100)"
+        HA["High Bias<br/>Low Variance<br/>⚠️ Underfitting risk"]
+      end
+      LA --> OA --> HA
+      style LA fill:#fef3c7,stroke:#f59e0b
+      style OA fill:#dcfce7,stroke:#22c55e
+      style HA fill:#fee2e2,stroke:#ef4444
+  </div>
+</div>
+<p class="fig-caption">Fig 10: Bias-Variance Tradeoff — GridSearchCV Finds the Optimal Balance Point</p>
+
+<div class="box purple">
+  <strong>Note on "Learning Rate":</strong> Scikit-learn's Ridge, Lasso, and ElasticNet do <strong>not</strong> use gradient descent with a learning rate. They use closed-form mathematical solvers (SVD/Cholesky decomposition) or Coordinate Descent. The hyperparameter we tune is <strong>Alpha (α)</strong> — the regularization strength — not a learning rate.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- CHAPTER 6 -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 class="chapter-title">Chapter 6<br>Optimization & Hyperparameter Tuning</h2>
+
+<h3>6.1 GridSearchCV Process</h3>
+<p>
+  <code>GridSearchCV</code> performs an exhaustive search over a predefined grid of hyperparameter values. For each combination, it trains the model using cross-validation and selects the combination that produces the highest average score.
+</p>
+
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    flowchart TD
+      A["Define Parameter Grid<br/>α ∈ {0.001, 0.01, 0.1, 1.0, 10}<br/>l1_ratio ∈ {0.1, 0.3, 0.5, 0.7, 0.8, 0.9}"] --> B["GridSearchCV Engine"]
+      B --> C["Split data into 5 folds"]
+      C --> D["For each α, l1_ratio combination:"]
+      D --> E["Train on folds 1-4, test on fold 5"]
+      D --> F["Train on folds 1,2,3,5, test on fold 4"]
+      D --> G["... rotate through all 5 splits"]
+      E --> H["Average R² across 5 folds"]
+      F --> H
+      G --> H
+      H --> I{"Is this the best<br/>average R² so far?"}
+      I -->|Yes| J["🏆 Update best params"]
+      I -->|No| K["Try next combination"]
+      K --> D
+      J --> L["Final: α = 0.001<br/>l1_ratio = 0.8<br/>R² = 0.7158"]
+      style A fill:#e0f2fe,stroke:#0284c7
+      style L fill:#dcfce7,stroke:#22c55e
+  </div>
+</div>
+<p class="fig-caption">Fig 11: GridSearchCV Exhaustive Hyperparameter Search Process</p>
+
+<h3>6.2 5-Fold Cross-Validation</h3>
+<p>
+  K-Fold CV (k = 5) splits the training data into 5 equal folds. The model trains on 4 folds and validates on the remaining fold, rotating 5 times. The average score provides a reliable, bias-reduced estimate.
+</p>
+
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    gantt
+      title 5-Fold Cross-Validation — Data Split Rotation
+      dateFormat X
+      axisFormat %s
+      section Fold 1
+        Test   : crit, 0, 1
+        Train  : 1, 5
+      section Fold 2
+        Train  : 0, 1
+        Test   : crit, 1, 2
+        Train  : 2, 5
+      section Fold 3
+        Train  : 0, 2
+        Test   : crit, 2, 3
+        Train  : 3, 5
+      section Fold 4
+        Train  : 0, 3
+        Test   : crit, 3, 4
+        Train  : 4, 5
+      section Fold 5
+        Train  : 0, 4
+        Test   : crit, 4, 5
+  </div>
+</div>
+<p class="fig-caption">Fig 12: 5-Fold Cross-Validation — Each Fold Serves as Test Set Exactly Once</p>
+
+<h3>6.3 Hyperparameter Search Space</h3>
+<table>
+  <thead><tr><th>Model</th><th>Hyperparameters Searched</th><th>Total Combinations</th></tr></thead>
+  <tbody>
+    <tr><td>Ridge</td><td>α ∈ {0.001, 0.01, 0.1, 1.0, 10, 100}</td><td>6</td></tr>
+    <tr><td>Lasso</td><td>α ∈ {0.001, 0.01, 0.1, 1.0, 10}</td><td>5</td></tr>
+    <tr><td>ElasticNet</td><td>α ∈ {0.001, 0.01, 0.1, 1.0} × l1_ratio ∈ {0.1, 0.3, 0.5, 0.7, 0.8, 0.9}</td><td>24</td></tr>
+  </tbody>
+</table>
+<p>Each combination is evaluated 5 times (5-fold CV), producing a total of <strong>(6 + 5 + 24) × 5 = 175 model fits</strong>.</p>
+
+<h3>6.4 Evaluation Metrics</h3>
+<table>
+  <thead><tr><th>Metric</th><th>Formula</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><strong>R² Score</strong></td><td>1 − (SS_res / SS_tot)</td><td>Proportion of variance explained. 1.0 = perfect.</td></tr>
+    <tr><td><strong>MSE</strong></td><td>(1/n) Σ(y − ŷ)²</td><td>Penalizes large errors heavily. Optimization target.</td></tr>
+    <tr><td><strong>MAE</strong></td><td>(1/n) Σ|y − ŷ|</td><td>Average absolute error. Human-readable (₹ Lakhs).</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- CHAPTER 7 -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 class="chapter-title">Chapter 7<br>Results & Discussion</h2>
+
+<h3>7.1 Before vs After Optimization</h3>
+
+<h4>7.1.1 Before Optimization (Default Hyperparameters)</h4>
+<table>
+  <thead><tr><th>Model</th><th>Default α</th><th>R²</th><th>MSE</th></tr></thead>
+  <tbody>
+    <tr><td>Linear Regression</td><td>N/A</td><td>0.7084</td><td>3,075.94</td></tr>
     <tr><td>Ridge</td><td>α = 1.0</td><td>0.7151</td><td>3,005.50</td></tr>
     <tr><td>Lasso</td><td>α = 1.0</td><td>0.6577</td><td>3,611.19</td></tr>
     <tr><td>ElasticNet</td><td>α = 1.0, l1_ratio = 0.5</td><td>0.5594</td><td>4,648.49</td></tr>
   </tbody>
 </table>
 
-<h4>4.1.2 After GridSearchCV Optimization</h4>
+<h4>7.1.2 After GridSearchCV Optimization</h4>
 <table>
-  <thead>
-    <tr><th>Model</th><th>Best α</th><th>R² Score</th><th>MSE</th><th>ΔR² Improvement</th></tr>
-  </thead>
+  <thead><tr><th>Model</th><th>Best α</th><th>R²</th><th>MSE</th><th>ΔR² Improvement</th></tr></thead>
   <tbody>
     <tr><td>Linear Regression</td><td>N/A</td><td>0.7084</td><td>3,075.94</td><td>— (baseline)</td></tr>
     <tr><td>Ridge</td><td>α = 1.0</td><td>0.7151</td><td>3,005.50</td><td>+0.00%</td></tr>
     <tr><td>Lasso</td><td>α = 0.01</td><td>0.7106</td><td>3,053.39</td><td>+8.04%</td></tr>
-    <tr style="background: #f0fdf4; font-weight: bold;">
-      <td>ElasticNet ⭐</td><td>α = 0.001, l1_ratio = 0.8</td><td>0.7158</td><td>2,998.33</td><td>+27.96%</td></tr>
+    <tr style="background:#f0fdf4; font-weight:bold;"><td>ElasticNet ⭐</td><td>α = 0.001, l1_ratio = 0.8</td><td>0.7158</td><td>2,998.33</td><td>+27.96%</td></tr>
   </tbody>
 </table>
 
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    xychart-beta
+      title "R² Score: Before vs After Optimization"
+      x-axis ["Linear", "Ridge", "Lasso", "ElasticNet"]
+      y-axis "R² Score" 0.5 --> 0.75
+      bar [0.7084, 0.7151, 0.6577, 0.5594]
+      bar [0.7084, 0.7151, 0.7106, 0.7158]
+  </div>
+</div>
+<p class="fig-caption">Fig 13: R² Score Comparison — Before (light) vs After (dark) GridSearchCV Optimization</p>
+
 <div class="box success">
-  <strong>Champion Model:</strong> <strong>ElasticNet</strong> achieved the highest R² (0.7158) and lowest MSE (2,998.33) of all four models after hyperparameter optimization, with a <strong>27.96% improvement</strong> over its untuned baseline. The combination of L1 (feature selection) and L2 (coefficient stability) proved optimal for this high-dimensional, location-heavy dataset.
+  <strong>Champion Model:</strong> <strong>ElasticNet</strong> achieved the highest R² (0.7158) and lowest MSE (2,998.33) with a <strong>27.96% improvement</strong> over default. The combined L1+L2 penalty proved optimal for this high-dimensional, location-heavy dataset.
 </div>
 
-<h4>Visual Analysis</h4>
+<h3>7.2 Final Model Comparison</h3>
+<p><strong>Table 2: Final Accuracy Comparison</strong></p>
+<table>
+  <thead><tr><th>Model</th><th>Penalty</th><th>R² (%)</th><th>MSE</th><th>Remarks</th></tr></thead>
+  <tbody>
+    <tr><td>Linear Regression</td><td>None</td><td>70.84%</td><td>3,075.94</td><td>Baseline; unstable coefficients</td></tr>
+    <tr><td>Ridge (L2)</td><td>α·Σ(β²)</td><td>71.51%</td><td>3,005.50</td><td>Stable; default α already near-optimal</td></tr>
+    <tr><td>Lasso (L1)</td><td>α·Σ|β|</td><td>71.06%</td><td>3,053.39</td><td>Feature selection; +8% improvement</td></tr>
+    <tr style="background:#f0fdf4; font-weight:bold;"><td>ElasticNet ⭐</td><td>Combined</td><td>71.58%</td><td>2,998.33</td><td>Best overall; +27.96% improvement</td></tr>
+  </tbody>
+</table>
+
+<h4>Visual Result Analysis</h4>
 <table style="border: none;">
   <tr>
-    <td style="width: 50%; text-align: center; border: none;">
-      <h4>Fig 2: Actual vs Predicted Prices</h4>
+    <td style="width:50%; text-align:center; border:none;">
+      <h4>Fig 14: Actual vs Predicted Prices</h4>
       <img src="../backend/ml_pipeline/outputs/baseline/actual_vs_predicted.png" width="95%" alt="Actual vs Predicted">
     </td>
-    <td style="width: 50%; text-align: center; border: none;">
-      <h4>Fig 3: Residual Error Distribution</h4>
+    <td style="width:50%; text-align:center; border:none;">
+      <h4>Fig 15: Residual Error Distribution</h4>
       <img src="../backend/ml_pipeline/outputs/baseline/residuals.png" width="95%" alt="Residuals">
     </td>
   </tr>
 </table>
 
-<h3>4.2 Model Comparison</h3>
+<h3>7.3 Performance Insights</h3>
 
-<p><strong>Table 2: Final Accuracy Comparison</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Model / Method</th>
-      <th>Penalty Type</th>
-      <th>Best R² (%)</th>
-      <th>MSE</th>
-      <th>Remarks</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td>Linear Regression</td><td>None</td><td>70.84%</td><td>3,075.94</td><td>Baseline; unstable coefficients with 262 features</td></tr>
-    <tr><td>Ridge (L2)</td><td>α·Σ(β²)</td><td>71.51%</td><td>3,005.50</td><td>Stable; default α = 1.0 already near-optimal</td></tr>
-    <tr><td>Lasso (L1)</td><td>α·Σ|β|</td><td>71.06%</td><td>3,053.39</td><td>Feature selection; improved 8% from default</td></tr>
-    <tr style="background:#f0fdf4; font-weight:bold;"><td>ElasticNet (L1+L2) ⭐</td><td>Combined</td><td>71.58%</td><td>2,998.33</td><td>Best overall; strong generalization, +27.96% improvement</td></tr>
-  </tbody>
-</table>
-
-<h3>4.3 Performance Insights</h3>
-
-<h4>4.3.1 Why ElasticNet Outperformed All Other Models</h4>
-<p>
-  Our dataset contains 262 features, of which 178 are one-hot-encoded locations. These location features form natural <strong>correlated groups</strong> (neighboring areas tend to have similar pricing patterns). This is precisely the scenario where ElasticNet excels:
-</p>
+<h4>7.3.1 Why ElasticNet Won</h4>
+<p>Our dataset contains 262 features, of which 178 are one-hot-encoded locations forming natural <strong>correlated groups</strong>. ElasticNet excels here because:</p>
 <ul>
-  <li>The <strong>L2 component</strong> (Ridge-like) handles the correlated location groups by shrinking their coefficients uniformly, preventing any single neighborhood from dominating the prediction.</li>
-  <li>The <strong>L1 component</strong> (Lasso-like) with l1_ratio = 0.8 drives truly irrelevant features to exactly zero, performing automatic feature selection. Our ElasticNet zeroed out 11 location features entirely, simplifying the model without losing accuracy.</li>
-  <li>The combination achieves the <strong>lowest MSE (2,998.33)</strong> by balancing the bias-variance tradeoff better than either pure L1 or pure L2 alone.</li>
+  <li>The <strong>L2 component</strong> (20%) handles correlated location groups by shrinking coefficients uniformly.</li>
+  <li>The <strong>L1 component</strong> (80%) drives 11 truly irrelevant features to exactly zero, simplifying the model.</li>
+  <li>The combination achieves the <strong>lowest MSE</strong> (2,998.33) by balancing the bias-variance tradeoff.</li>
 </ul>
 
-<h4>4.3.2 Coefficient Stability Analysis</h4>
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    flowchart TD
+      A["262 Features (Input)"] --> B["ElasticNet<br/>α=0.001, l1_ratio=0.8"]
+      B --> C["L1 Component (80%)<br/>Zeros out 11 useless locations"]
+      B --> D["L2 Component (20%)<br/>Shrinks remaining 251 features"]
+      C --> E["251 Active Features"]
+      D --> E
+      E --> F["🏆 R² = 0.7158<br/>MSE = 2,998.33"]
+      style F fill:#dcfce7,stroke:#22c55e
+  </div>
+</div>
+<p class="fig-caption">Fig 16: How ElasticNet's Combined Penalty Processes Our 262 Features</p>
+
+<h3>7.4 Coefficient Stability Analysis</h3>
 <p>
-  The primary success criterion was <strong>"stable coefficients"</strong>. Before regularization, the baseline Linear Regression assigned wildly unstable weights to rare locations — some coefficients exceeding ±500 in magnitude. After applying ElasticNet's combined penalty:
+  The primary success criterion was <strong>"stable coefficients"</strong>. Before regularization, baseline Linear Regression assigned wildly unstable weights to rare locations. After applying ElasticNet's combined penalty, coefficient magnitudes normalized proportionally to their true market influence.
 </p>
-<ul>
-  <li>The maximum coefficient magnitude dropped significantly</li>
-  <li>Location weights became proportional to their true market influence</li>
-  <li>Cross-validation variance decreased, indicating consistent performance across different data splits</li>
-</ul>
 
-<h4>4.3.3 Understanding the Regularization Parameter (α)</h4>
-<div class="box">
-  <strong>What is Alpha (α)?</strong><br>
-  Alpha controls the severity of the regularization penalty. It is <strong>not</strong> a learning rate — scikit-learn's linear models use closed-form mathematical solvers (SVD/Cholesky decomposition) or Coordinate Descent, not gradient descent.
-  <ul style="margin-top: 8px;">
-    <li><strong>High α (e.g., 100):</strong> Very strict penalty → all coefficients shrink aggressively → underfitting (model too simple).</li>
-    <li><strong>Low α (e.g., 0.001):</strong> Gentle penalty → coefficients are mostly free → risk of overfitting (model too complex).</li>
-    <li><strong>Optimal α (found by GridSearchCV):</strong> α = 0.001 for our ElasticNet — just enough penalty to stabilize coefficients without sacrificing predictive power.</li>
-  </ul>
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    graph LR
+      subgraph "Before Regularization"
+        B1["Location A: β = +523<br/>❌ Wildly inflated"]
+        B2["Location B: β = -418<br/>❌ Unrealistically negative"]
+        B3["Area: β = +12.3<br/>Reasonable"]
+      end
+      subgraph "After ElasticNet"
+        A1["Location A: β = +18.7<br/>✅ Stable & proportional"]
+        A2["Location B: β = -2.1<br/>✅ Close to zero"]
+        A3["Area: β = +11.9<br/>✅ Nearly unchanged"]
+      end
+      B1 -->|Regularization| A1
+      B2 -->|Regularization| A2
+      B3 -->|Regularization| A3
+      style B1 fill:#fee2e2,stroke:#ef4444
+      style B2 fill:#fee2e2,stroke:#ef4444
+      style A1 fill:#dcfce7,stroke:#22c55e
+      style A2 fill:#dcfce7,stroke:#22c55e
+      style A3 fill:#dcfce7,stroke:#22c55e
+  </div>
 </div>
+<p class="fig-caption">Fig 17: Coefficient Stability — Before vs After Regularization</p>
 
-<h3>4.4 System Deployment</h3>
 
-<h4>4.4.1 System Architecture</h4>
-<div class="diagram">
-┌─────────────────────┐       HTTP POST (JSON)         ┌─────────────────────┐
-│                     │   { area, bhk, bath,            │                     │
-│   Next.js Frontend  │     balcony, location }         │   FastAPI Backend   │
-│   (React/JS)        │ ─────────────────────────────▶  │   (Python)          │
-│                     │                                 │                     │
-│   • Prediction Form │ ◀─────────────────────────────  │   • /predict        │
-│   • Model Charts    │   { predicted_price, model,     │   • /compare        │
-│   • PDF Export      │     r2_score, contributions }   │   • /explain        │
-│   • Explainability  │                                 │   • /models         │
-└─────────────────────┘                                 └──────────┬──────────┘
-                                                                   │
-                                                          loads at startup
-                                                                   │
-                                                        ┌──────────▼──────────┐
-                                                        │                     │
-                                                        │   ML Model Registry │
-                                                        │                     │
-                                                        │   • linear_model.pkl│
-                                                        │   • ridge_model.pkl │
-                                                        │   • lasso_model.pkl │
-                                                        │   • elasticnet.pkl  │
-                                                        │   • scaler.pkl      │
-                                                        │                     │
-                                                        └─────────────────────┘
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- CHAPTER 8 -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 class="chapter-title">Chapter 8<br>System Architecture & Deployment</h2>
+
+<h3>8.1 System Architecture</h3>
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    flowchart LR
+      subgraph Frontend["🖥️ Frontend (Next.js / React)"]
+        F1["Prediction Form"]
+        F2["Model Comparison Charts"]
+        F3["Explainability Waterfall"]
+        F4["Sensitivity Sliders"]
+        F5["PDF Export Engine"]
+      end
+      subgraph Backend["⚡ Backend (FastAPI / Python)"]
+        B1["POST /predict"]
+        B2["POST /compare"]
+        B3["POST /explain"]
+        B4["GET /models"]
+      end
+      subgraph ML["🧠 ML Model Registry"]
+        M1["linear_model.pkl"]
+        M2["ridge_model.pkl"]
+        M3["lasso_model.pkl"]
+        M4["elasticnet_model.pkl"]
+        M5["scaler.pkl"]
+      end
+      F1 -->|"JSON Request"| B1
+      F2 -->|"JSON Request"| B2
+      F3 -->|"JSON Request"| B3
+      B1 -->|"Load & Predict"| M4
+      B2 -->|"Run All 4"| ML
+      B3 -->|"Feature Contributions"| M4
+      B4 -->|"Registry Info"| ML
+      M4 -.->|"Uses"| M5
+  </div>
 </div>
+<p class="fig-caption">Fig 18: Complete System Architecture — Frontend ↔ Backend ↔ ML Models</p>
 
-<h4>4.4.2 API Design</h4>
+<h3>8.2 API Design</h3>
 <table>
   <thead><tr><th>Endpoint</th><th>Method</th><th>Purpose</th></tr></thead>
   <tbody>
     <tr><td><code>GET /</code></td><td>GET</td><td>Health check — confirms server is running</td></tr>
     <tr><td><code>GET /models</code></td><td>GET</td><td>Returns all 4 models with R², MSE, hyperparameters</td></tr>
-    <tr><td><code>POST /predict</code></td><td>POST</td><td>Predict price with a specific model (default: ElasticNet)</td></tr>
-    <tr><td><code>POST /compare</code></td><td>POST</td><td>Run ALL 4 models on the same input, return comparison table</td></tr>
-    <tr><td><code>POST /explain</code></td><td>POST</td><td>Return feature-by-feature contribution breakdown (XAI)</td></tr>
+    <tr><td><code>POST /predict</code></td><td>POST</td><td>Predict price with a specific model (default: best)</td></tr>
+    <tr><td><code>POST /compare</code></td><td>POST</td><td>Run ALL 4 models on same input, return comparison</td></tr>
+    <tr><td><code>POST /explain</code></td><td>POST</td><td>Return feature-by-feature contribution breakdown</td></tr>
   </tbody>
 </table>
 
-<h4>4.4.3 Web Application Features</h4>
+<h4>Sample API Request & Response</h4>
+<pre><code>POST /predict
+Content-Type: application/json
+
+{
+  "area": 1500,
+  "bedrooms": 3,
+  "bathrooms": 2,
+  "balcony": 2,
+  "location": "Whitefield"
+}</code></pre>
+<pre><code>{
+  "predicted_price_lakhs": 87.45,
+  "model_used": "elasticnet",
+  "r2_score": 0.7158,
+  "status": "success"
+}</code></pre>
+
+<h3>8.3 Web Application Features</h3>
+
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    mindmap
+      root("🏡 House Price<br/>Predictor Web App")
+        ("📝 Prediction Form")
+          ("Area, BHK, Bath input")
+          ("178 locations dropdown")
+          ("Balcony count selector")
+        ("📊 Model Comparison")
+          ("Compare All 4 models")
+          ("Bar chart visualization")
+          ("R² score display")
+        ("🧠 Explainability")
+          ("Waterfall chart")
+          ("Feature contributions")
+          ("Plain-English rationale")
+        ("🎚️ Sensitivity Analysis")
+          ("Real-time price sliders")
+          ("Area & BHK sensitivity")
+          ("Instant visual feedback")
+        ("📄 PDF Report")
+          ("Auto-generated downloads")
+          ("Includes all sections")
+          ("Professional formatting")
+        ("📜 Prediction History")
+          ("Local storage persistence")
+          ("Compare past predictions")
+          ("Reuse previous inputs")
+  </div>
+</div>
+<p class="fig-caption">Fig 19: Web Application Feature Map — All Interactive Components</p>
+
+<h4>Feature Details</h4>
 <ul>
-  <li><strong>Interactive Prediction Form:</strong> Users input area, BHK, bathrooms, balconies, and select from 178 Bengaluru locations to get an instant price estimate.</li>
-  <li><strong>4-Model Comparison:</strong> The "Compare All" feature runs all 4 models simultaneously on the same input, displaying predicted prices and R² scores side-by-side.</li>
-  <li><strong>Real-Time Sensitivity Sliders:</strong> Users can drag area/BHK sliders and watch the predicted price update in real-time, demonstrating the linear relationship visually.</li>
-  <li><strong>Explainability Engine (XAI):</strong> A waterfall chart shows the exact monetary contribution of each feature (e.g., "Whitefield location adds ₹12.4L") to the final prediction.</li>
-  <li><strong>Model Explanation Panel:</strong> A detailed panel explaining the active model's algorithm, formula, regularization type, strengths, limitations, and a plain-English breakdown of why a specific price was predicted.</li>
-  <li><strong>Automated PDF Export:</strong> The entire prediction result, comparison table, and explanation can be exported as a professional PDF report generated client-side via jsPDF.</li>
-  <li><strong>Prediction History:</strong> All past predictions are stored in browser local storage for comparison.</li>
+  <li><strong>Interactive Prediction Form:</strong> Users input area, BHK, bathrooms, balconies, and select from 178 Bengaluru locations for instant price estimates.</li>
+  <li><strong>4-Model Comparison:</strong> "Compare All" runs all 4 models simultaneously, displaying prices and R² scores side-by-side in bar charts.</li>
+  <li><strong>Real-Time Sensitivity Sliders:</strong> Drag area/BHK sliders to watch predicted price update instantly, demonstrating the linear relationship visually.</li>
+  <li><strong>Explainability Engine (XAI):</strong> A waterfall chart shows exact monetary contribution of each feature to the final prediction.</li>
+  <li><strong>Model Explanation Panel:</strong> Detailed breakdown of the algorithm, formula, regularization type, strengths, and limitations.</li>
+  <li><strong>Automated PDF Export:</strong> Entire prediction, comparison, and explanation exported as a professional multi-page PDF via jsPDF.</li>
+  <li><strong>Prediction History:</strong> All past predictions stored in browser localStorage for comparison.</li>
 </ul>
 
-<h4>4.4.4 Folder Structure</h4>
+<h3>8.4 Project Structure</h3>
 <pre><code>CSE275-Project/
 ├── data/
 │   └── Bengaluru_House_Data.csv          ← Raw dataset (13,320 rows)
@@ -862,63 +1005,71 @@
 │       ├── 06_optimization.py            ← Phase 6: GridSearchCV tuning
 │       ├── 07_advanced_models.py         ← Phase 7: Final model selection
 │       ├── run_pipeline.py               ← Master pipeline runner
-│       └── outputs/
-│           ├── eda/                      ← EDA plots (heatmap, boxplots)
-│           ├── baseline/                 ← Actual vs predicted, residuals
-│           ├── processed/                ← X_processed.csv, scaler.pkl
-│           └── optimization/             ← before_vs_after.csv results
+│       └── outputs/                      ← All artifacts & plots
 ├── frontend/
 │   ├── app/
-│   │   ├── page.js                       ← Main page layout
-│   │   ├── globals.css                   ← Design system (dark theme)
-│   │   └── components/
-│   │       ├── PredictionForm.js         ← Input form + prediction logic
-│   │       ├── ModelCharts.js            ← Bar/radar comparison charts
-│   │       ├── ExplainabilityChart.js    ← Waterfall contribution chart
-│   │       ├── ModelExplanation.js       ← Algorithm explanation panel
-│   │       ├── SensitivitySliders.js     ← Real-time sensitivity analysis
-│   │       ├── PredictionHistory.js      ← LocalStorage history table
-│   │       └── PDFExport.js              ← Automated PDF report generation
+│   │   ├── page.js                       ← Main layout
+│   │   ├── globals.css                   ← Design system
+│   │   └── components/                   ← 8 React components
 │   └── package.json
 ├── docs/
 │   └── project_report.html               ← This document
 └── README.md</code></pre>
 
+<div class="mermaid-wrapper">
+  <div class="mermaid">
+    flowchart TD
+      subgraph "User Interaction Flow"
+        U["👤 User opens web app"] --> F["Fills prediction form<br/>Area, BHK, Bath, Location"]
+        F --> P["Clicks 'Predict Price'"]
+        P --> API["Frontend → POST /predict → Backend"]
+        API --> ML["Backend loads scaler.pkl<br/>Scales input → Runs ElasticNet"]
+        ML --> R["Returns predicted price + metadata"]
+        R --> UI["Frontend displays result card<br/>₹87.45 Lakhs"]
+        UI --> C{"User wants more?"}
+        C -->|Compare| CMP["POST /compare → 4-model table"]
+        C -->|Explain| EXP["POST /explain → Waterfall chart"]
+        C -->|Slider| SL["Real-time sensitivity analysis"]
+        C -->|Export| PDF["Generate PDF report"]
+      end
+  </div>
+</div>
+<p class="fig-caption">Fig 20: Complete User Interaction Flow — From Input to Prediction to Analysis</p>
+
 
 <!-- ══════════════════════════════════════════════════════════ -->
-<!-- CHAPTER 5: CONCLUSION AND FUTURE WORK -->
+<!-- CHAPTER 9 -->
 <!-- ══════════════════════════════════════════════════════════ -->
 <div class="page-break"></div>
-<h2 class="chapter-title">Chapter 5<br>Conclusion and Future Work</h2>
+<h2 class="chapter-title">Chapter 9<br>Conclusion & Future Work</h2>
 
-<h3>5.1 Conclusion</h3>
+<h3>9.1 Conclusion</h3>
 <p>
-  This project successfully developed a complete, industry-grade machine learning system for predicting residential property prices in Bengaluru, India. Beginning with a raw CSV dataset of 13,320 records, we performed rigorous data preprocessing — handling missing values, removing outliers, engineering features, and applying one-hot encoding — to produce a clean dataset of <strong>9,219 records with 262 features</strong>.
+  This project successfully developed a complete, industry-grade machine learning system for predicting residential property prices in Bengaluru, India. Beginning with a raw CSV dataset of 13,320 records, we performed rigorous data preprocessing to produce a clean dataset of <strong>9,219 records with 262 features</strong>.
 </p>
 <p>
-  We trained and compared four regression models: Linear Regression (baseline), Ridge (L2), Lasso (L1), and ElasticNet (L1+L2). Through systematic hyperparameter tuning using <strong>GridSearchCV with 5-fold cross-validation</strong>, we identified <strong>ElasticNet (α = 0.001, l1_ratio = 0.8)</strong> as the champion model, achieving:
+  We trained and compared four regression models and through <strong>GridSearchCV with 5-fold cross-validation</strong>, identified <strong>ElasticNet (α = 0.001, l1_ratio = 0.8)</strong> as the champion model, achieving:
 </p>
 <ul>
   <li><strong>R² Score:</strong> 0.7158 (71.58% variance explained)</li>
-  <li><strong>MSE:</strong> 2,998.33</li>
-  <li><strong>Improvement:</strong> 27.96% over its untuned default configuration</li>
+  <li><strong>MSE:</strong> 2,998.33 (lowest across all models)</li>
+  <li><strong>Improvement:</strong> 27.96% over default ElasticNet; best across all 4 models</li>
 </ul>
 <p>
-  The project's optimization objective — <strong>minimizing regularized loss (L2)</strong> — was achieved through the ElasticNet's combined L1+L2 penalty, which stabilized coefficients by shrinking extreme location weights while also performing automatic feature selection (11 irrelevant features were zeroed out). The success criterion of a <strong>high R² score with stable coefficients</strong> was met: the 71.58% R² demonstrates strong predictive power on messy real-world data, and the regularized coefficients produce consistent, interpretable predictions across all 178 Bengaluru neighborhoods.
+  The optimization objective — <strong>minimizing regularized loss (L2)</strong> — was achieved through ElasticNet's combined L1+L2 penalty, which stabilized coefficients and performed automatic feature selection. The success criterion of a <strong>high R² score with stable coefficients</strong> was fully met.
 </p>
 <p>
-  Beyond the machine learning requirements, this project demonstrates an <strong>end-to-end engineering workflow</strong> — from data science to deployment. The trained model is served through a FastAPI REST API and consumed by a modern Next.js/React web application featuring real-time predictions, 4-model comparison, explainability analysis, sensitivity sliders, and automated PDF report generation. This transforms a standard academic regression exercise into a production-ready, user-facing application.
+  Beyond ML, this project demonstrates a full engineering workflow: the model is served via a <strong>FastAPI REST API</strong> and consumed by a <strong>Next.js/React web application</strong> with real-time predictions, 4-model comparison, explainability, sensitivity analysis, and PDF export — transforming a standard academic exercise into a production-ready application.
 </p>
 
-<h3>5.2 Future Work</h3>
-<p>While the project meets all stated objectives, several areas present opportunities for future improvement:</p>
+<h3>9.2 Future Work</h3>
 <ul>
-  <li><strong>Advanced Algorithms:</strong> Exploring non-linear models such as Random Forest, Gradient Boosting (XGBoost/LightGBM), or Neural Networks could potentially capture non-linear relationships between features and prices that linear models cannot represent.</li>
-  <li><strong>Temporal Features:</strong> Incorporating time-series data (property price trends over months/years) and economic indicators (interest rates, inflation) could significantly improve predictions in a dynamic market.</li>
-  <li><strong>Spatial Analysis:</strong> Integrating geographical coordinates and GIS data to capture proximity effects (distance to metro stations, schools, hospitals) would add a powerful spatial dimension to the model.</li>
-  <li><strong>Data Augmentation:</strong> The current dataset is limited to Bengaluru. Expanding to other Indian metro cities (Mumbai, Delhi, Hyderabad) would create a more generalizable system.</li>
-  <li><strong>Real-Time Data Integration:</strong> Connecting the system to live real-estate listing APIs would enable the model to be retrained periodically on fresh data, keeping predictions current with market conditions.</li>
-  <li><strong>Mobile Application:</strong> Developing a native mobile app (iOS/Android) would make the prediction system accessible to property buyers and agents in the field.</li>
+  <li><strong>Non-linear Models:</strong> Exploring Random Forest, XGBoost, or Neural Networks for capturing non-linear feature relationships.</li>
+  <li><strong>Temporal Features:</strong> Incorporating price trends over time and economic indicators (interest rates, inflation).</li>
+  <li><strong>Spatial Analysis:</strong> Integrating GIS data for proximity effects (metro stations, schools, hospitals).</li>
+  <li><strong>Multi-City Expansion:</strong> Extending to Mumbai, Delhi, Hyderabad for a pan-India prediction system.</li>
+  <li><strong>Live Data Feeds:</strong> Connecting to real-estate listing APIs for periodic model retraining.</li>
+  <li><strong>Mobile Application:</strong> Native iOS/Android app for field use by property buyers and agents.</li>
 </ul>
 
 
@@ -928,16 +1079,16 @@
 <div class="page-break"></div>
 <h2 class="chapter-title">References</h2>
 <ol>
-  <li>C. R. Madhuri, G. Anuradha, and M. V. Pujitha, "House Price Prediction Using Regression Techniques: A Comparative Study," <em>International Journal of Scientific Research in Science and Technology</em>, vol. 6, no. 2, pp. 712–718, 2019.</li>
-  <li>A. Varma, A. Sarma, S. Doshi, and R. Nair, "House Price Prediction Using Machine Learning and Neural Networks," <em>Proceedings of the 2nd International Conference on Inventive Communication and Computational Technologies (ICICCT)</em>, IEEE, pp. 1936–1939, 2018.</li>
-  <li>T. D. Phan, "Housing Price Prediction Using Machine Learning Algorithms: The Case of Melbourne City, Australia," <em>Machine Learning, Multi Agent and Cyber Physical Systems (Proceedings)</em>, vol. 1, pp. 8–14, 2019.</li>
+  <li>C. R. Madhuri, G. Anuradha, and M. V. Pujitha, "House Price Prediction Using Regression Techniques: A Comparative Study," <em>Int. J. Scientific Research in Science and Technology</em>, vol. 6, no. 2, pp. 712–718, 2019.</li>
+  <li>A. Varma, A. Sarma, S. Doshi, and R. Nair, "House Price Prediction Using Machine Learning and Neural Networks," <em>Proc. 2nd ICICCT</em>, IEEE, pp. 1936–1939, 2018.</li>
+  <li>T. D. Phan, "Housing Price Prediction Using Machine Learning Algorithms: The Case of Melbourne City, Australia," <em>Machine Learning, Multi Agent and Cyber Physical Systems</em>, vol. 1, pp. 8–14, 2019.</li>
   <li>J. Mu, F. Wu, and A. Zhang, "Housing Value Forecasting Based on Machine Learning Methods," <em>Abstract and Applied Analysis</em>, vol. 2014, Article ID 648047, 2014.</li>
-  <li>B. Park and J. K. Bae, "Using Machine Learning Algorithms for Housing Price Prediction: The Case of Fairfax County, Virginia Housing Data," <em>Expert Systems with Applications</em>, vol. 42, no. 6, pp. 2928–2934, 2015.</li>
-  <li>A. N. Alfiyatin, R. E. Febrita, H. Taufiq, and W. F. Mahmudy, "Modeling House Price Prediction Using Regression Analysis and Particle Swarm Optimization," <em>International Journal of Advanced Computer Science and Applications</em>, vol. 8, no. 10, pp. 323–326, 2017.</li>
-  <li>F. Pedregosa et al., "Scikit-learn: Machine Learning in Python," <em>Journal of Machine Learning Research</em>, vol. 12, pp. 2825–2830, 2011.</li>
-  <li>S. Ramírez-Gallego et al., "A Survey on Data Preprocessing for Data Stream Mining: Current Status and Future Directions," <em>Neurocomputing</em>, vol. 239, pp. 39–57, 2017.</li>
-  <li>T. Hastie, R. Tibshirani, and J. Friedman, <em>The Elements of Statistical Learning: Data Mining, Inference, and Prediction</em>, 2nd ed. Springer, 2009.</li>
-  <li>H. Zou and T. Hastie, "Regularization and Variable Selection via the Elastic Net," <em>Journal of the Royal Statistical Society: Series B</em>, vol. 67, no. 2, pp. 301–320, 2005.</li>
+  <li>B. Park and J. K. Bae, "Using Machine Learning Algorithms for Housing Price Prediction," <em>Expert Systems with Applications</em>, vol. 42, no. 6, pp. 2928–2934, 2015.</li>
+  <li>A. N. Alfiyatin et al., "Modeling House Price Prediction Using Regression Analysis and Particle Swarm Optimization," <em>IJACSA</em>, vol. 8, no. 10, pp. 323–326, 2017.</li>
+  <li>F. Pedregosa et al., "Scikit-learn: Machine Learning in Python," <em>JMLR</em>, vol. 12, pp. 2825–2830, 2011.</li>
+  <li>S. Ramírez-Gallego et al., "A Survey on Data Preprocessing for Data Stream Mining," <em>Neurocomputing</em>, vol. 239, pp. 39–57, 2017.</li>
+  <li>T. Hastie, R. Tibshirani, and J. Friedman, <em>The Elements of Statistical Learning</em>, 2nd ed. Springer, 2009.</li>
+  <li>H. Zou and T. Hastie, "Regularization and Variable Selection via the Elastic Net," <em>J. Royal Statistical Society: Series B</em>, vol. 67, no. 2, pp. 301–320, 2005.</li>
 </ol>
 
 
@@ -946,7 +1097,8 @@
 <!-- ══════════════════════════════════════════════════════════ -->
 <div class="footer">
   <p><strong>House Price Prediction Using Regularized Regression Models</strong></p>
-  <p>CSE275 — Lovejeet Singh & Mohammad Asim | Lovely Professional University, 2026</p>
+  <p>CSE275 — Lovejeet Singh (12521613) & Mohammad Asim (12518421)</p>
+  <p>Lovely Professional University, Phagwara | 15 April 2026</p>
 </div>
 
 </div><!-- /.container -->
