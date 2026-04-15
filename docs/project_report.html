@@ -266,7 +266,7 @@
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- CHAPTER 1 -->
 <!-- ══════════════════════════════════════════════════════════ -->
-<hr style="border:none; border-top:2px solid #e2e8f0; margin:40px 0;">
+<div class="page-break-formal"></div>
 <h2 class="chapter-title">Chapter 1<br>Introduction</h2>
 
 <h3>1.1 Background</h3>
@@ -317,7 +317,7 @@
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- CHAPTER 2 -->
 <!-- ══════════════════════════════════════════════════════════ -->
-<hr style="border:none; border-top:2px solid #e2e8f0; margin:40px 0;">
+<div class="page-break-formal"></div>
 <h2 class="chapter-title">Chapter 2<br>Literature Review</h2>
 
 <h3>2.1 Related Work</h3>
@@ -386,7 +386,7 @@
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- CHAPTER 3 -->
 <!-- ══════════════════════════════════════════════════════════ -->
-<hr style="border:none; border-top:2px solid #e2e8f0; margin:40px 0;">
+<div class="page-break-formal"></div>
 <h2 class="chapter-title">Chapter 3<br>Dataset & Exploratory Data Analysis</h2>
 
 <h3>3.1 Dataset Description</h3>
@@ -481,20 +481,20 @@
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- CHAPTER 4 -->
 <!-- ══════════════════════════════════════════════════════════ -->
-<hr style="border:none; border-top:2px solid #e2e8f0; margin:40px 0;">
+<div class="page-break-formal"></div>
 <h2 class="chapter-title">Chapter 4<br>Data Preprocessing & Feature Engineering</h2>
 
 <h3>4.1 Data Cleaning Pipeline</h3>
-<div class="mermaid-wrapper">
+<div class="mermaid-wrapper" style="transform: scale(0.82); transform-origin: top center;">
   <div class="mermaid">
     flowchart TD
-      A["📂 Raw Dataset<br/>n = 13,320 rows × 9 cols"] --> B["🗑️ Drop Duplicates<br/>529 removed → n = 12,791"]
-      B --> C["🩹 Handle Missing Values<br/>Drop society column entirely<br/>Median impute bath & balcony"]
-      C --> D["🔧 Fix total_sqft<br/>Convert ranges to averages<br/>Remove unparseable units"]
-      D --> E["📐 Extract BHK<br/>Parse 'size' column<br/>'3 BHK' → 3"]
-      E --> F["📊 Compute price_per_sqft<br/>Intermediate anomaly metric"]
-      F --> G["✂️ Remove Outliers<br/>sqft/bhk < 300 filter<br/>±1σ per location"]
-      G --> H["✅ Clean Dataset<br/>n = 9,219 rows"]
+      A["Raw Data: 13,320 × 9"] --> B["Drop 529 Duplicates"]
+      B --> C["Handle Missing Values"]
+      C --> D["Fix total_sqft Ranges"]
+      D --> E["Extract BHK from size"]
+      E --> F["Compute price_per_sqft"]
+      F --> G["Remove Outliers"]
+      G --> H["Clean: 9,219 rows"]
       style A fill:#fef3c7,stroke:#f59e0b
       style H fill:#dcfce7,stroke:#22c55e
   </div>
@@ -578,7 +578,7 @@
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- CHAPTER 5 -->
 <!-- ══════════════════════════════════════════════════════════ -->
-<hr style="border:none; border-top:2px solid #e2e8f0; margin:40px 0;">
+<div class="page-break-formal"></div>
 <h2 class="chapter-title">Chapter 5<br>Model Design & Mathematical Foundation</h2>
 
 <p>This chapter details the four regression algorithms used, their mathematical loss functions, and the theoretical rationale for regularization. This is the core of our project's objective: <em>"Minimize regularized loss (L2) for stable coefficients."</em></p>
@@ -663,7 +663,7 @@
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- CHAPTER 6 -->
 <!-- ══════════════════════════════════════════════════════════ -->
-<hr style="border:none; border-top:2px solid #e2e8f0; margin:40px 0;">
+<div class="page-break-formal"></div>
 <h2 class="chapter-title">Chapter 6<br>Optimization & Hyperparameter Tuning</h2>
 
 <h3>6.1 GridSearchCV Process</h3>
@@ -752,7 +752,7 @@
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- CHAPTER 7 -->
 <!-- ══════════════════════════════════════════════════════════ -->
-<hr style="border:none; border-top:2px solid #e2e8f0; margin:40px 0;">
+<div class="page-break-formal"></div>
 <h2 class="chapter-title">Chapter 7<br>Results & Discussion</h2>
 
 <h3>7.1 Before vs After Optimization</h3>
@@ -879,7 +879,7 @@
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- CHAPTER 8 -->
 <!-- ══════════════════════════════════════════════════════════ -->
-<hr style="border:none; border-top:2px solid #e2e8f0; margin:40px 0;">
+<div class="page-break-formal"></div>
 <h2 class="chapter-title">Chapter 8<br>System Architecture & Deployment</h2>
 
 <h3>8.1 System Architecture</h3>
@@ -1044,7 +1044,7 @@ Content-Type: application/json
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- CHAPTER 9 -->
 <!-- ══════════════════════════════════════════════════════════ -->
-<hr style="border:none; border-top:2px solid #e2e8f0; margin:40px 0;">
+<div class="page-break-formal"></div>
 <h2 class="chapter-title">Chapter 9<br>Conclusion & Future Work</h2>
 
 <h3>9.1 Conclusion</h3>
@@ -1080,7 +1080,7 @@ Content-Type: application/json
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- REFERENCES -->
 <!-- ══════════════════════════════════════════════════════════ -->
-<hr style="border:none; border-top:2px solid #e2e8f0; margin:40px 0;">
+<div class="page-break-formal"></div>
 <h2 class="chapter-title">References</h2>
 <ol>
   <li>C. R. Madhuri, G. Anuradha, and M. V. Pujitha, "House Price Prediction Using Regression Techniques: A Comparative Study," <em>Int. J. Scientific Research in Science and Technology</em>, vol. 6, no. 2, pp. 712–718, 2019.</li>
