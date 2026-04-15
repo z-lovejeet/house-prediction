@@ -55,7 +55,15 @@ desktop.ini
 # ── PDF exports (generated from HTML report) ─────────────
 docs/*.pdf
 
+# ── Node.js / Next.js (Frontend) ─────────────────────────
+node_modules/
+.next/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
 # ── Miscellaneous ────────────────────────────────────────
 *.log
 *.tmp
 .env
+.env*
