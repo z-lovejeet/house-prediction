@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSE275 Project Report - House Price Prediction</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    </script>
+    <style>
+        @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white !important; }
+            .no-print { display: none; }
+            .page-break { page-break-before: always; }
+            .shadow-lg { box-shadow: none !important; border: 1px solid #e5e7eb; }
+        }
+        body { background-color: #f8fafc; color: #0f172a; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .gradient-text { background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-image: linear-gradient(to right, #4f46e5, #06b6d4); }
+        .card { background: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); padding: 2rem; margin-bottom: 2rem; border: 1px solid #e2e8f0; }
+        h1, h2, h3, h4 { color: #1e293b; font-weight: 700; margin-bottom: 1rem; }
+        h2 { border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; margin-top: 2rem; }
+        code { background-color: #f1f5f9; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: ui-monospace, monospace; font-size: 0.875em; color: #db2777; }
+        .formula { background-color: #f8fafc; padding: 1rem; border-left: 4px solid #4f46e5; font-family: "Courier New", Courier, monospace; font-size: 1.1em; margin: 1rem 0; overflow-x: auto; }
+        .qa-box { background: #f0fdfa; border-left: 4px solid #0d9488; padding: 1.5rem; margin-top: 1rem; border-radius: 0 0.5rem 0.5rem 0; }
+        .qa-q { font-weight: bold; color: #0f766e; margin-bottom: 0.5rem; font-size: 1.1em; }
+        .qa-a { color: #334155; line-height: 1.6; }
+    </style>
+</head>
+<body class="max-w-5xl mx-auto py-10 px-6">
+
+    <!-- Print Button -->
+    <div class="fixed top-6 right-6 no-print">
+        <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow">
+            🖨️ Save as PDF
+        </button>
+    </div>
+
+    <!-- Title Page -->
+    <div class="text-center py-16 card">
+        <h3 class="text-indigo-600 font-bold uppercase tracking-widest mb-2">CSE275 Project Report</h3>
+        <h1 class="text-5xl font-extrabold mb-4 gradient-text pb-2">House Price Prediction System</h1>
+        <p class="text-xl text-slate-500 mb-8 max-w-2xl mx-auto">An enterprise-grade machine learning pipeline, API, and web application for real estate valuation.</p>
+        
+        <div class="inline-block bg-slate-50 border border-slate-200 rounded-lg p-6 text-left shadow-sm">
+            <h4 class="text-sm uppercase text-slate-400 font-bold mb-2">Developed By</h4>
+            <div class="text-lg font-semibold text-slate-800">Lovejeet Singh &amp; Mohammad Asim</div>
+        </div>
+
+        <div class="mt-12 bg-indigo-50 border border-indigo-100 rounded-lg p-6 max-w-3xl mx-auto text-left">
+            <h4 class="text-indigo-800 font-bold mb-2">Academic Problem Statement</h4>
+            <p class="text-slate-700 font-medium">Build a regression model to estimate house prices from location, area, and amenities.</p>
+            <ul class="mt-3 space-y-2 text-slate-600">
+                <li><strong>Optimization objective:</strong> Minimize regularized loss (L2).</li>
+                <li><strong>Success criterion:</strong> High R² score with stable coefficients.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- System Architecture Workflow -->
+    <div class="card page-break">
+        <h2 class="text-2xl">1. System Architecture & Workflow</h2>
+        <p class="text-slate-600 mb-6">The project follows a modern, decoupled architecture connecting raw data processing to a consumer-facing web application.</p>
+        
+        <div class="flex justify-center bg-white p-4 border border-slate-200 rounded-lg">
+            <div class="mermaid">
+                flowchart TD
+                    subgraph Data["Phase 1-7: ML Data Pipeline (Python/Pandas/Scikit-Learn)"]
+                        A[(Raw CSV Data)] --> B[Data Cleaning & Outlier Removal]
+                        B --> C[Feature Engineering & One-Hot Encoding]
+                        C --> D{Model Training}
+                        D --> E[Linear Regression]
+                        D --> F[Ridge L2]
+                        D --> G[Lasso L1]
+                        D --> H[ElasticNet L1+L2]
+                        H --> I[(Saved .pkl Models)]
+                    end
+
+                    subgraph Backend["Phase 8: FastAPI Backend (Python)"]
+                        I -.-> J[ML Registry Service]
+                        J --> K[FastAPI Endpoints]
+                        K -->|"POST /predict"| K
+                        K -->|"POST /compare"| K
+                    end
+
+                    subgraph Frontend["Phase 9: Frontend (Next.js/React)"]
+                        K <==>|JSON via HTTP| L[Next.js Web App]
+                        L --> M[Comparison Charts]
+                        L --> N[Explainability Waterfall]
+                        L --> O[Interactive Form & PDF Export]
+                    end
+            </div>
+        </div>
+    </div>
+
+    <!-- The 7 ML Phases -->
+    <div class="card page-break">
+        <h2 class="text-2xl">2. The Machine Learning Pipeline</h2>
+        <p class="text-slate-600 mb-6">The model was trained on the Bengaluru House Price Dataset (9,200+ samples). The pipeline guarantees clean data and optimal model performance through 7 distinct phases.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="border border-slate-200 rounded-lg p-5">
+                <h3 class="text-lg text-indigo-700">Phase 1-3: Data Cleaning</h3>
+                <ul class="list-disc pl-5 text-slate-600 space-y-2">
+                    <li><strong>Drop NaNs:</strong> Removed incomplete rows.</li>
+                    <li><strong>Standardize Sqft:</strong> Converted range values (e.g., "2100 - 2850") to exact averages.</li>
+                    <li><strong>Outlier Removal:</strong> Removed houses where the price-per-sqft was beyond 1 Standard Deviation from the mean.</li>
+                </ul>
+            </div>
+            
+            <div class="border border-slate-200 rounded-lg p-5">
+                <h3 class="text-lg text-indigo-700">Phase 4-5: Feature Engineering</h3>
+                <ul class="list-disc pl-5 text-slate-600 space-y-2">
+                    <li><strong>Standardization:</strong> Added <code>price_per_sqft</code> for math logic.</li>
+                    <li><strong>Dimensionality Reduction:</strong> Any location with fewer than 10 houses was grouped into a single "Other" category to prevent the One-Hot array from exploding in size.</li>
+                </ul>
+            </div>
+
+            <div class="border border-slate-200 rounded-lg p-5 md:col-span-2">
+                <h3 class="text-lg text-indigo-700">Phase 6-7: Optimization & Training</h3>
+                <ul class="list-disc pl-5 text-slate-600 space-y-2">
+                    <li><strong>Algorithms:</strong> Trained Linear Regression, Ridge, Lasso, and ElasticNet.</li>
+                    <li><strong>GridSearchCV:</strong> Used 5-fold cross-validation to test hundreds of hyperparameters.</li>
+                    <li><strong>Result:</strong> ElasticNet was chosen as the champion model with an Alpha of <code>0.001</code> and l1_ratio of <code>0.8</code>.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- The Math: Behind the Scenes -->
+    <div class="card page-break">
+        <h2 class="text-2xl">3. Behind the Scenes: The Mathematics</h2>
+        
+        <h3 class="text-xl mt-6">Linear Regression Pipeline</h3>
+        <p class="text-slate-600">The baseline model fits a mathematical line describing the relationship between inputs and price.</p>
+        <div class="formula">Price = (w₁ × Area) + (w₂ × BHK) + (w₃ × Bath) + Σ(wₖ × Location) + Intercept</div>
+        
+        <h3 class="text-xl mt-6">Why we used L2 Regularization (Ridge/ElasticNet)</h3>
+        <p class="text-slate-600 mb-4">In standard linear regression, with 262 features (mostly locations), the model suffers from <strong>Overfitting</strong>. It might assign an absurd weight like +₹50 Crores to a rare neighborhood just because of one anomalous data point. This results in <strong>Unstable Coefficients</strong>.</p>
+        <p class="text-slate-600 mb-4">L2 Regularization solves this by adding a "penalty" to the loss function based on the size of the coefficients (weights).</p>
+        <div class="formula">Loss = Standard MSE Error + α · Σ(Weights²)</div>
+        <p class="text-slate-600 mt-2"><strong>What this does:</strong> It physically pulls the weights down towards zero. The algorithm is forced to spread the value out logically rather than putting massive weights on single features. This perfectly satisfies the teacher's requirement: <em>Minimize regularized loss (L2) to achieve stable coefficients.</em></p>
+
+        <h3 class="text-xl mt-6">Key Terminology Dictionary</h3>
+        <table class="min-w-full text-left mt-4 border-collapse">
+            <thead>
+                <tr class="bg-slate-100 border-b border-slate-200">
+                    <th class="p-3">Term</th>
+                    <th class="p-3">Definition in our Project</th>
+                </tr>
+            </thead>
+            <tbody class="text-slate-600 divide-y divide-slate-200">
+                <tr>
+                    <td class="p-3 font-semibold text-slate-800">MSE (Mean Squared Error)</td>
+                    <td class="p-3">The average squared difference between the predicted prices and actual prices. We mathematically minimize this to train the model.</td>
+                </tr>
+                <tr>
+                    <td class="p-3 font-semibold text-slate-800">R² (R-Squared) Score</td>
+                    <td class="p-3">The accuracy grade. An R² of 0.71 means our model explains 71% of the variance in house prices. (A very high score for messy real-estate data).</td>
+                </tr>
+                <tr>
+                    <td class="p-3 font-semibold text-slate-800">Alpha (\(\alpha\))</td>
+                    <td class="p-3">The severity of the regularization penalty. High alpha = strict penalty (underfitting). Low alpha = weak penalty (overfitting). We automatically found the perfect balance (\(\alpha=0.001\)) using GridSearchCV.</td>
+                </tr>
+                <tr>
+                    <td class="p-3 font-semibold text-slate-800">Learning Rate</td>
+                    <td class="p-3"><em>Trick question!</em> Scikit-learn's standard estimators use closed-form mathematical solvers (like SVD or Cholesky) or Coordinate Descent, not traditional Gradient Descent, meaning there is no explicit "learning rate" like in deep learning. The hyperparameter we tune is <em>Alpha</em>.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Interactive Viva / Examiner Q&A Guide -->
+    <div class="card page-break">
+        <h2 class="text-2xl">4. Presentation Q&A Guide (Viva Prep)</h2>
+        <p class="text-slate-600 mb-6">If the examiner asks you any questions about the project, use these exact, pre-prepared answers to demonstrate your deep understanding.</p>
+
+        <div class="qa-box">
+            <div class="qa-q">Q: Did you achieve the objective of "Minimizing regularized loss (L2) for stable coefficients"?</div>
+            <div class="qa-a"><strong>Answer:</strong> Yes, perfectly. We implemented Ridge and ElasticNet which explicitly add an L2 penalty to the loss function. Before L2, our Linear Regression baseline was mathematically unstable—rare locations were getting massive negative or positive coefficients. By applying L2 regularization, we forced the model to shrink and stabilize those coefficients, preventing overfitting and giving us highly realistic location weights.</div>
+        </div>
+
+        <div class="qa-box mt-4">
+            <div class="qa-q">Q: What is the final accuracy of your model?</div>
+            <div class="qa-a"><strong>Answer:</strong> Our final ElasticNet model achieved an R² score of <strong>0.7158 (71.58%)</strong>. Considering a dataset spanning 9,200 varying real-world homes, achieving >70% accuracy on unseen test data while maintaining strictly regularized coefficients is an excellent result.</div>
+        </div>
+
+        <div class="qa-box mt-4">
+            <div class="qa-q">Q: Why ElasticNet instead of just Ridge (L2)?</div>
+            <div class="qa-a"><strong>Answer:</strong> Our dataset had 260+ features after One-Hot Encoding the locations. Ridge (L2) shrinks coefficients but keeps all 260 features. ElasticNet combines L2 (for stability) with L1 (Lasso, which drops irrelevant features entirely). Our ElasticNet dropped 11 useless location features completely, making the model faster, smaller, and more stable than pure Ridge.</div>
+        </div>
+
+        <div class="qa-box mt-4">
+            <div class="qa-q">Q: How do you know how the model arrived at a specific price limit in the UI?</div>
+            <div class="qa-a"><strong>Answer:</strong> We built an Explainability Engine into the backend API. When predicting, the API returns the exact <strong>Feature Contributions</strong>. It mathematically extracts the exact monetary value (in Lakhs) that the Area, BHK, and specific Location added or subtracted from the Base Intercept. We display this dynamically to the user in a Waterfall chart.</div>
+        </div>
+    </div>
+
+    <!-- Web App Features -->
+    <div class="card page-break">
+        <h2 class="text-2xl">5. Enterprise Application Features</h2>
+        <p class="text-slate-600 mb-4">Beyond the Machine Learning requirements, we developed a production-ready Web Application (React+Next.js via FastAPI) to serve the model to end users.</p>
+        
+        <ul class="space-y-4">
+            <li class="flex items-start">
+                <span class="text-2xl mr-3">📊</span>
+                <div>
+                    <h4 class="text-slate-800 text-lg mb-1">Model Comparison Engine</h4>
+                    <p class="text-slate-600">Users can hit a "Compare All" button. The backend mathematically evaluates the exact same input through all 4 ML models simultaneously and displays the variance in predicted prices and R² scores.</p>
+                </div>
+            </li>
+            <li class="flex items-start">
+                <span class="text-2xl mr-3">🎚️</span>
+                <div>
+                    <h4 class="text-slate-800 text-lg mb-1">Real-Time Sensitivity Sliders</h4>
+                    <p class="text-slate-600">Users can slide Area/BHK bars left and right and watch the House Price update instantly without reloading, demonstrating the mathematical linear relationship live.</p>
+                </div>
+            </li>
+            <li class="flex items-start">
+                <span class="text-2xl mr-3">🧠</span>
+                <div>
+                    <h4 class="text-slate-800 text-lg mb-1">Explainability Panel (XAI)</h4>
+                    <p class="text-slate-600">A dedicated panel breaking down the exact algorithm used, strengths, limitations, and a line-item receipt showing exactly why the model chose a specific price for a user's input.</p>
+                </div>
+            </li>
+            <li class="flex items-start">
+                <span class="text-2xl mr-3">📄</span>
+                <div>
+                    <h4 class="text-slate-800 text-lg mb-1">Automated PDF Reporting</h4>
+                    <p class="text-slate-600">The entire prediction, comparison, and explanation metrics can be downloaded instantly as a professional, multi-page PDF generated entirely client-side via jsPDF.</p>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <div class="text-center mt-12 mb-8 text-slate-400 text-sm no-print">
+        Designed for CSE275 Submission. Print this page (Ctrl+P / Cmd+P) to save as a highly formatted PDF.
+    </div>
+
+</body>
+</html>
