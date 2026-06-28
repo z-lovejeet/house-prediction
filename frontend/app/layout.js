@@ -19,6 +19,8 @@ export const metadata = {
   keywords: ["house price", "prediction", "bengaluru", "machine learning"],
 };
 
+import RenderNotice from "./components/RenderNotice";
+
 export default function RootLayout({ children }) {
   return (
     <html
@@ -27,6 +29,7 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
+        <RenderNotice />
       </body>
     </html>
   );
